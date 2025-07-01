@@ -1,0 +1,69 @@
+.about-page-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #FFFFFF;
+}
+
+.credit-row-title {
+  text-align: center;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  font-size: 7.5vh;
+
+  @media (max-width: 767px) {
+    font-size: 5vh;
+  }
+}
+
+.credit-row {
+  position: relative;
+  justify-content: center;
+  display: flex;
+  flex-direction: row;
+  margin-top: 2.5vh;
+  margin-bottom: 2.5vh;
+  flex-wrap: wrap;
+}
+
+.credit-cell {
+  position: relative;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2vh 1vw;
+  text-align: center;
+  text-decoration: none;
+  color: #000000;
+}
+
+.credit-cell:hover{
+  cursor: pointer;
+  color: #9F9F9F;
+}
+
+.credit-cell img {
+  width: 30vh; /* Ensure the image covers the container's width */
+  object-fit: cover;
+  border-radius: 1vh;
+}
+
+.credit-name {
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  font-size: 20px;
+}
+
+.credit-title {
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  font-size: 2.5vh;
+}
+
+.thankyou-box {
+  align-self: center;
+  text-align: center;
+  width: 70vw;
+  margin-bottom: 30px;
+}
