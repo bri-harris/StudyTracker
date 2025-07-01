@@ -11,12 +11,12 @@ If you'd like to run the website locally on your machine, follow these steps:
 2. **Clone Your Fork**  
    Clone the forked repository to your local machine:
    ```bash
-   git clone https://github.com/<your-username>/BytesOfLoveWebsite.git
+   git clone https://github.com/<your-username>/StudyTracker
    ``` 
 3. **Navigate to the Directory**  
    Change to the directory of the cloned repository:
    ```bash
-   cd BytesOfLoveWebsite
+   cd StudyTracker
    ``` 
 
 4. **Install Dependencies**  
