@@ -49,7 +49,7 @@ const Team = () => {
           target="_blank"
         >
           <img className="img" src="headshot/Alyssa.jpg" alt="Alyssa Picture" />
-          <div className="credit-name">Alyssa Edwards</div>
+          <div className="credit-name">Alyssa Williams</div>
           <div className="credit-title">Frontend Developer</div>
         </a>
       </div>
