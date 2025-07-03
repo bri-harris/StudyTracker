@@ -44,6 +44,16 @@ const Navbar = () => {
           <div className="header-option-text">Sign In</div>
         </div>
 
+          {/* For testing only, will eventually be removed */}
+        <div
+          className="header-option-container"
+          onClick={() => {
+            navigate(`/studyinterface`);
+          }}
+        >
+          <div className="header-option-text">Study Tracker</div>
+        </div>
+
       </div>
     </div>
   );
