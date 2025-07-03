@@ -4,17 +4,17 @@ import axios from 'axios'
 import { useNavigate } from "react-router-dom";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
-import './SignIn.css';
+import './Register.css';
 
-function SignIn() {    
-
+function Register() {    
+    const [name, setName] = useState()
     const [email, setEmail] = useState()
     const [password, setPassword] = useState()
     const navigate = useNavigate()
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        axios.post("http://localhost:3001/signin", { email, password })
+        axios.post("http://localhost:3001/register", { email, password })
         .then(result => {
             console.log(result)
             if(result.data === "Success"){
@@ -35,9 +35,21 @@ function SignIn() {
       <Navbar />
 
       <div className="content-wrapper">
-        <div className="signin-box">
-          <h2>Welcome Back!</h2>
+        <div className="register-box">
+          <h2>Let's Get Acquainted!</h2>
           <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label htmlFor="email">
+                <strong>Name</strong>
+              </label>
+              <input type="text" 
+                placeholder='Enter Name' 
+                autoComplete='off' 
+                name='email' 
+                className='form-control rounded-0'
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             <div className="mb-3">
               <label htmlFor="email"><strong>Email</strong></label>
               <input
@@ -60,12 +72,12 @@ function SignIn() {
               />
             </div>
             <button type="submit" className="btn btn-success w-100 rounded-0">
-              Sign In
+              Register
             </button>
           </form>
-          <p className="mt-3">Don't have an account?</p>
-          <Link to="/register" className="btn btn-default border w-100 bg-light rounded-0 text-decoration-none">
-            Register
+          <p className="mt-3">Already have an account?</p>
+          <Link to="/signin" className="btn btn-default border w-100 bg-light rounded-0 text-decoration-none">
+            Sign In
           </Link>
         </div>
       </div>
@@ -75,4 +87,4 @@ function SignIn() {
   );
 }
 
-export default SignIn;
+export default Register;

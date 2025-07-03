@@ -45,7 +45,7 @@ const Team = () => {
 
         <a
           className="credit-cell"
-          href="https://www.linkedin.com/in/alyssa-williams-91b578254/"
+          href="https://www.linkedin.com/in/alyssa-williams-848878221/"
           target="_blank"
         >
           <img className="img" src="headshot/Alyssa.jpg" alt="Alyssa Picture" />
