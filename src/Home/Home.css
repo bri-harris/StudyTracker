@@ -1,3 +1,9 @@
+/* This section is global, be very careful what we add here */
+/* Currently, this just hides the scrollbar for cleanliness */
+* {
+  scrollbar-width: none;
+}
+
 body {
     overflow-x: hidden;
 }
