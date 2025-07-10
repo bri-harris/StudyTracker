@@ -29,9 +29,8 @@ body {
     gap: 10px;
     background-color: #f2c399;
     padding: 10px;
-    width: 80%;
+    width: 100%;
     height: 80vh;
-    border-radius: 10px;
 }
 
 .sidebar {
@@ -42,6 +41,179 @@ body {
     flex-direction: column;
 }
 
+.sidebar .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f44336;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+}
+
+.add-toggle {
+    margin-left: auto;
+    font-size: 20px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    color: #f44336;
+    cursor: pointer;
+}
+
+.add-dropdown {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    top: 100%;
+    right: 10px;
+    border-radius: 6px;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.add-dropdown div {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.add-dropdown div:hover {
+    background: #eee;
+}
+
+.folder-form {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.folder-form input[type="text"] {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.folder-form input[type="color"] {
+    width: 40px;
+    height: 40px;
+    border: none;
+    padding: 0;
+}
+
+.folder-form button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.folder-list li {
+    padding: 8px;
+    cursor: pointer;
+    margin: 4px 0;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.folder-item {
+    margin-bottom: 10px;
+}
+
+.folder-header {
+    padding: 8px 10px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.add-task-button {
+    background-color: white;
+    color: #f44336;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.add-task-button:hover {
+    background-color: #ffdad7;
+}
+
+.todo-input {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    padding: 0 10px;
+}
+
+.todo-input input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.todo-input button {
+    padding: 6px 12px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.todo-list {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+.todo-list li {
+    padding: 6px;
+    margin: 5px 0;
+    background: #f9f9f9;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.todo-list li.completed span {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.task-buttons {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.task-buttons button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.middle-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    grid-row: 1 / span 2;
+}
 
 .main {
     position: relative;
@@ -51,43 +223,50 @@ body {
     width: 100vw;
 }
 
-.footer {
+.image-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.achievements-bar {
     background-color: #e53935;
     color: white;
     text-align: center;
     border-radius: 5px;
     font-weight: bold;
     cursor: pointer;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-
-.footer.collapsed {
-    max-height: 40px;
-}
-
-.footer:not(.collapsed) {
-    max-height: 200px;
-}
-
-.footer-header {
-    padding: 10px;
-}
-
-.footer-content {
+    width: 100%;
     padding: 10px;
 }
 
 .widgets {
+    grid-row: 1 / span 2;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: 100%;
 }
 
 .widget {
     background-color: #ffe0c4;
     border-radius: 10px;
-    height: 45%;
+    height: 100%;
+    flex: 1;
+    margin-bottom: 10px;
+}
+
+.calendar-widget {
+
+    background-color: #ffe0c4;
+}
+
+
+.pomodoro-widget {
+
+    background-color: #ffe0c4;
 }
 
 .header {
