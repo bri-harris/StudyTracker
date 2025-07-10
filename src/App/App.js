@@ -19,6 +19,7 @@ function App() {
         <Route path="/register" exact element={<Register />} />
         <Route path="/study" exact element={<Study />} />
         <Route path="/pomodoro" exact element={<Pomodoro />} />
+
       </Routes>
     </BrowserRouter>
   );
