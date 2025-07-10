@@ -4,6 +4,7 @@ import Home from '../Home/Home';
 import Team from '../Team/Team';
 import SignIn from '../SignIn/SignIn';
 import Register from '../Register/Register';
+import StudyInterface from '../StudyInterface/StudyInterface';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/team" exact element={<Team />} />
         <Route path="/signin" exact element={<SignIn />} />
         <Route path="/register" exact element={<Register />} />
+        <Route path="/studyinterface" exact element={<StudyInterface />}/>
       </Routes>
     </BrowserRouter>
   );
