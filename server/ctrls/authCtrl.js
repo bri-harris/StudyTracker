@@ -17,10 +17,17 @@ const handleLogin = async (req, res) => {
     //evaluate password
     const match = await bcrypt.compare(pwd, foundUser.password);
     if (match) {
+        const roles = Object.values(foundUser.roles);
+
         //create access & refresh token here
         const accessToken = jwt.sign(
-            //pass in a payload, well use username
-            { "username": foundUser.username },
+            //pass in a payload
+            {
+                "UserInfo": {
+                    "username": foundUser.username,
+                    "roles": roles
+                }
+            },
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: '100s' }
         );
