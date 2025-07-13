@@ -9,9 +9,9 @@ import Pomodoro from '../Pomodoro/Pomodoro';
 import './App.css';
 
 function App() {
-    
+
   return (
-    <BrowserRouter>  
+    <BrowserRouter>
       <Routes>
         <Route path="/" exact element={<Home />} />
         <Route path="/team" exact element={<Team />} />
