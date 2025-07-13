@@ -15,8 +15,8 @@ const taskSchema = new Schema({
         type: Date,
         required: false
     },
-    completioned: {
-        type: boolean,
+    completed: {
+        type: Boolean,
         required: true,
         default: false
     }
