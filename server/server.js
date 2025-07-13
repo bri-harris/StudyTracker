@@ -8,13 +8,20 @@ const PORT = process.env.port || 5000;
 //CORS: cross origin resource sharing
 app.use(cors(corsOptions));
 
+//built-in middleare to handle url encoded data aka, form data:
+//'content-type: application/x-www-form-urlencoded'
+app.use(express.urlencoded({ extended: false }));
+
+//built-in middleware for json, supplied to all routes as it comes in
+app.use(express.json());
+
 app.get("/api", (req, res) => {
     res.json({ "users": ["userOne", "userTwo", "userThree"] })
 })
 
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
+app.use('/', require('./routes/root'));
+// app.use('/signin', require('./routes/auth'))
+app.use('/students', require('./routes/api/students'))
 
 //backend server running on port 5000, client server (REACT) will be running on port 3000
 app.listen(PORT, () => { console.log(`Server from server.js running on port 5000`) })
