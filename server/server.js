@@ -21,7 +21,8 @@ app.get("/api", (req, res) => {
 })
 
 app.use('/', require('./routes/root'));
-// app.use('/signin', require('./routes/auth'))
+app.use('/register', require('./routes/register'));
+app.use('/auth', require('./routes/auth'));
 app.use('/students', require('./routes/api/students'))
 
 //backend server running on port 5000, client server (REACT) will be running on port 3000
