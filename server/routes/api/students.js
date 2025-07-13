@@ -1,38 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const data = {}
-data.students = require('../../model/students.json')
+const studentsCtrl = require('../../ctrls/studentsCtrl')
 
 //parameters coming from body
 router.route('/')
     //get all students
-    .get((req, res) => {
-        res.json(data.students)
-    })
+    .get(studentsCtrl.getAllStudents)
     //create a student
-    .post((req, res) => {
-        res.json({
-            "firstname": req.body.firstname,
-            "lastname": req.body.lastname
-        })
-    })
+    .post(studentsCtrl.createStudent)
     //update a students information
-    .put((req, res) => {
-        res.json({
-            "firstname": req.body.firstname,
-            "lastname": req.body.lastname
-        })
-    })
+    .put(studentsCtrl.updateStudent)
     //delete a user by ID
-    .delete((req, res) => {
-        res.json({ "id": req.body.id })
-    });
+    .delete(studentsCtrl.deleteStudent);
 
 //paramater is in the URL
-router.route('/:id')
-    .get((req, res) => {
-        res.json({ "id": req.params.id })
-    })
+router.route('/:id').get(studentsCtrl.getStudentByID)
 
 
 module.exports = router;

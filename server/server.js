@@ -15,6 +15,7 @@ app.use(express.urlencoded({ extended: false }));
 //built-in middleware for json, supplied to all routes as it comes in
 app.use(express.json());
 
+//testing, was able to get this onto the react front
 app.get("/api", (req, res) => {
     res.json({ "users": ["userOne", "userTwo", "userThree"] })
 })
