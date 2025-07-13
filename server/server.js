@@ -1,11 +1,17 @@
-const express = require('express')
+require('dotenv').config();
+const express = require('express');
 const app = express();
 const path = require('path');
 const cors = require('cors');
 const corsOptions = require('./config/corsOptions');
 const validateJWTToken = require('./middleware/validateJWTToken');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+const connectDB = require('./config/dbConn');
 const PORT = process.env.port || 5000;
+
+//connect to mongodb
+connectDB();
 
 //CORS: cross origin resource sharing
 app.use(cors(corsOptions));
@@ -33,7 +39,11 @@ app.use('/logout', require('./routes/logout')); //refresh token might not be nee
 
 //need a valid session and JWT Token for all routes below
 app.use(validateJWTToken)
-app.use('/students', require('./routes/api/students'))
+app.use('/tasks', require('./routes/api/tasks'))
 
 //backend server running on port 5000, client server (REACT) will be running on port 3000
-app.listen(PORT, () => { console.log(`Server from server.js running on port 5000`) })
+//We dont want to listen for requests if we dont connect to mongoose
+mongoose.connection.once('open', () => {
+    console.log("Connected to MongoDB");
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+});
