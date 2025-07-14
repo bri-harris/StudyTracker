@@ -6,28 +6,27 @@ import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import './Register.css';
 
-function Register() {    
-    const [name, setName] = useState()
-    const [email, setEmail] = useState()
-    const [password, setPassword] = useState()
-    const navigate = useNavigate()
+function Register() {
+  const [name, setName] = useState()
+  const [email, setEmail] = useState()
+  const [pwd, setPassword] = useState()
+  const navigate = useNavigate()
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        axios.post("http://localhost:3001/register", { email, password })
-        .then(result => {
-            console.log(result)
-            if(result.data === "Success"){
-                navigate("/home")
-            }else{
-                navigate("/register")
-                alert("You are not registered to this service")
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    axios.post("http://localhost:5000/register", { name, email, pwd })
+      .then(result => {
+        console.log(result)
+        if (result.data === "Success") {
+          navigate("/home")
+        } else {
+          navigate("/register")
+          alert("You are not registered to this service")
 
-            }
-       
-        })
-        .catch(err => console.log(err))
-    }
+        }
+      })
+      .catch(err => console.log(err))
+  }
 
 
   return (
@@ -42,10 +41,10 @@ function Register() {
               <label htmlFor="email">
                 <strong>Name</strong>
               </label>
-              <input type="text" 
-                placeholder='Enter Name' 
-                autoComplete='off' 
-                name='email' 
+              <input type="text"
+                placeholder='Enter Name'
+                autoComplete='off'
+                name='email'
                 className='form-control rounded-0'
                 onChange={(e) => setName(e.target.value)}
               />
