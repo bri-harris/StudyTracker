@@ -18,7 +18,7 @@ function Register() {
       .then(result => {
         console.log(result)
         if (result.status === 201) {
-          navigate("/home")
+          navigate("/study")
         } else {
           navigate("/register")
           alert("You are not registered to this service")
