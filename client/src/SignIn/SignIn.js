@@ -6,28 +6,28 @@ import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import './SignIn.css';
 
-function SignIn() {    
+function SignIn() {
 
-    const [email, setEmail] = useState()
-    const [password, setPassword] = useState()
-    const navigate = useNavigate()
+  const [email, setEmail] = useState()
+  const [pwd, setPassword] = useState()
+  const navigate = useNavigate()
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        axios.post("http://localhost:3001/signin", { email, password })
-        .then(result => {
-            console.log(result)
-            if(result.data === "Success"){
-                navigate("/home")
-            }else{
-                navigate("/register")
-                alert("You are not registered to this service")
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    axios.post("http://localhost:5000/auth", { email, pwd })
+      .then(result => {
+        console.log(result)
+        if (result.status === 200) {
+          navigate("/study")
+        } else {
+          navigate("/register")
+          alert("You are not registered to this service")
 
-            }
-       
-        })
-        .catch(err => console.log(err))
-    }
+        }
+
+      })
+      .catch(err => console.log(err))
+  }
 
 
   return (
