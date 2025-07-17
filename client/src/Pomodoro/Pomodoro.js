@@ -6,7 +6,10 @@ import Footer from "../Footer/Footer";
 const Pomodoro = () => {
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isRunning, setIsRunning] = useState(false);
-    const [mode, setMode] = useState('work'); // 'work' or 'break'
+    const [mode, setMode] = useState('work');
+    
+    const [workTime, setWorkTime] = useState(25 * 60);
+    const [breakTime, setBreakTime] = useState(5 * 60);
 
     useEffect(() => {
         let timer;
@@ -28,16 +31,28 @@ const Pomodoro = () => {
     };
 
     const startTimer = (selectedMode) => {
-        const duration = selectedMode === 'work' ? 25 * 60 : 5 * 60;
+        const duration = selectedMode === 'work' ? workTime : breakTime;
         setMode(selectedMode);
         setTimeLeft(duration);
         setIsRunning(true);
     };
 
     const resetTimer = () => {
-        const duration = mode === 'work' ? 25 * 60 : 5 * 60;
+        const duration = mode === 'work' ? workTime : breakTime;
         setIsRunning(false);
         setTimeLeft(duration);
+    };
+
+    const handleWorkTimeChange = (e) => {
+        const newWorkTime = Math.max(e.target.value * 60, 60); 
+        setWorkTime(newWorkTime);
+        if (mode === 'work') setTimeLeft(newWorkTime);
+    };
+
+    const handleBreakTimeChange = (e) => {
+        const newBreakTime = Math.max(e.target.value * 60, 60);
+        setBreakTime(newBreakTime);
+        if (mode === 'break') setTimeLeft(newBreakTime);
     };
 
     return (
@@ -52,20 +67,44 @@ const Pomodoro = () => {
                         This study method originated in the 1980s and is named after the iconic red, 
                         tomato-shaped kitchen timers that used to be a common kitchen item. These timers were
                         set to 25 minutes for a focus/work interval and 5 minutes for a break/refresh 
-                        interval.
+                        interval. Feel free to adjust the intervals to suit your goals! 
+                    </div>
+                </div>
+
+                <div className="time-settings">
+                    <div className="time-input">
+                        <label>Work Time (min):</label>
+                        <input 
+                            type="number" 
+                            value={workTime / 60} 
+                            onChange={handleWorkTimeChange} 
+                            min="1" 
+                            disabled={isRunning}
+                        />
+                    </div>
+
+                    <div className="time-input">
+                        <label>Break Time (min):</label>
+                        <input 
+                            type="number" 
+                            value={breakTime / 60} 
+                            onChange={handleBreakTimeChange} 
+                            min="1" 
+                            disabled={isRunning}
+                        />
                     </div>
                 </div>
 
                 <div className="timer-container">
                     <div className="timer-box">
-                        <h3>{mode === 'work' ? 'Work Timer (25 min)' : 'Break Timer (5 min)'}</h3>
+                        <h3>{mode === 'work' ? `Work Timer` : `Break Timer`}</h3>
                         <div className="timer-display">{formatTime(timeLeft)}</div>
                         <div className="timer-buttons">
                             <button onClick={() => startTimer('work')} disabled={isRunning && mode === 'work'}>
-                                Start 25-min Work
+                                Start Work
                             </button>
                             <button onClick={() => startTimer('break')} disabled={isRunning && mode === 'break'}>
-                                Start 5-min Break
+                                Start Break
                             </button>
                             <button onClick={resetTimer}>Reset</button>
                         </div>
