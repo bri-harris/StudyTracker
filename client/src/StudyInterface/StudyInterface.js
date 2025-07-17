@@ -12,6 +12,9 @@ const StudyTracker = () => {
     const [folders, setFolders] = useState([]);
     const [selectedFolderId, setSelectedFolderId] = useState(null);
 
+    const [draggedTaskInfo, setDraggedTaskInfo] = useState(null); // { folderId, taskIndex }
+    const [draggedFolderIndex, setDraggedFolderIndex] = useState(null);
+
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [showFolderForm, setShowFolderForm] = useState(false);
     const [showTaskForm, setShowTaskForm] = useState(false);
@@ -20,6 +23,39 @@ const StudyTracker = () => {
     const [newFolderName, setNewFolderName] = useState("");
     const [newTask, setNewTask] = useState("");
     const [editIndex, setEditIndex] = useState(null);
+    const [taskDeadline, setTaskDeadline] = useState("");
+    const [taskStartDate, setTaskStartDate] = useState("");
+
+    const calculateProgress = (startDate, deadline) => {
+        const start = new Date(startDate);
+        const end = new Date(deadline);
+        const now = new Date();
+
+        if (now >= end) return 100;
+        if (now <= start) return 0;
+
+        const totalMs = end - start;
+        const elapsedMs = now - start;
+
+        return Math.min(100, Math.round((elapsedMs / totalMs) * 100));
+    };
+
+    const getDaysLeft = (deadline) => {
+        if (!deadline) return "";
+
+        const [year, month, day] = deadline.split("-").map(Number);
+        const dueDate = new Date(year, month - 1, day);
+        const today = new Date();
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        const timeDiff = dueDate.getTime() - todayDate.getTime();
+        const dayDiff = Math.round(timeDiff / (1000 * 60 * 60 * 24));
+
+        if (dayDiff < 0) return "Overdue";
+        if (dayDiff === 0) return "Due today";
+        if (dayDiff === 1) return "Due tomorrow";
+        return `${dayDiff} days left`;
+    };
 
     const addTask = () => {
         if (!newTask.trim() || !selectedFolderId) return;
@@ -29,14 +65,19 @@ const StudyTracker = () => {
                 const updatedTasks = [...folder.tasks];
 
                 if (editIndex !== null) {
-                    // Editing existing task
                     updatedTasks[editIndex] = {
                         ...updatedTasks[editIndex],
                         text: newTask,
+                        deadline: taskDeadline,
+                        startDate: taskStartDate || updatedTasks[editIndex].startDate
                     };
                 } else {
-                    // Adding a new task
-                    updatedTasks.push({ text: newTask, completed: false });
+                    updatedTasks.push({
+                        text: newTask,
+                        completed: false,
+                        startDate: taskStartDate || new Date().toISOString(),
+                        deadline: taskDeadline
+                    });
                 }
 
                 return { ...folder, tasks: updatedTasks };
@@ -45,7 +86,9 @@ const StudyTracker = () => {
         }));
 
         setNewTask("");
-        setEditIndex(null); // Reset edit mode
+        setEditIndex(null);
+        setTaskDeadline("");
+        setTaskStartDate("");
         setShowTaskForm(false);
     };
 
@@ -68,6 +111,8 @@ const StudyTracker = () => {
         const folder = folders.find(f => f.id === folderId);
         if (!folder) return;
         setNewTask(folder.tasks[index].text);
+        setTaskDeadline(folder.tasks[index].deadline || "");
+        setTaskStartDate(folder.tasks[index].startDate || "");
         setEditIndex(index);
         setSelectedFolderId(folderId);
         setShowTaskForm(true);
@@ -116,6 +161,18 @@ const StudyTracker = () => {
                                 onChange={(e) => setNewTask(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && addTask()}
                             />
+                            <input
+                                type="date"
+                                value={taskStartDate}
+                                onChange={(e) => setTaskStartDate(e.target.value)}
+                                placeholder="Start date"
+                            />
+                            <input
+                                type="date"
+                                value={taskDeadline}
+                                onChange={(e) => setTaskDeadline(e.target.value)}
+                                placeholder="Deadline"
+                            />
                             <button onClick={addTask}>Add</button>
                         </div>
                     )}
@@ -154,12 +211,39 @@ const StudyTracker = () => {
                     )}
 
                     <ul className="folder-list">
-                        {folders.map(folder => (
-                            <li key={folder.id} className="folder-item">
+                        {folders.map((folder, folderIndex) => (
+                            <li
+                                key={folder.id}
+                                className="folder-item"
+                                draggable
+                                onDragStart={() => setDraggedFolderIndex(folderIndex)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    if (draggedFolderIndex === null || draggedFolderIndex === folderIndex) return;
+
+                                    const bounding = e.currentTarget.getBoundingClientRect();
+                                    const offset = e.clientY - bounding.top;
+                                    const dropBefore = offset < bounding.height / 2;
+                                    const newIndex = dropBefore ? folderIndex : folderIndex + 1;
+
+                                    const updated = [...folders];
+                                    const [moved] = updated.splice(draggedFolderIndex, 1);
+
+                                    // Adjust newIndex if moving forward in the list
+                                    const adjustedIndex = newIndex > draggedFolderIndex ? newIndex - 1 : newIndex;
+
+                                    updated.splice(adjustedIndex, 0, moved);
+
+                                    setFolders(updated);
+                                    setDraggedFolderIndex(null);
+                                }}
+                                onDragEnd={() => setDraggedFolderIndex(null)}
+                            >
                                 <div
                                     className="folder-header"
                                     onClick={() => {
-                                        setExpandedFolderId(prev => prev === folder.id ? null : folder.id)
+                                        setExpandedFolderId(prev => prev === folder.id ? null : folder.id);
                                         setSelectedFolderId(folder.id);
                                     }}
                                     style={{
@@ -177,6 +261,48 @@ const StudyTracker = () => {
                                                 key={index}
                                                 className={task.completed ? "completed" : ""}
                                                 style={{ borderLeft: `6px solid ${folder.color}` }}
+                                                draggable
+                                                onDragStart={() => setDraggedTaskInfo({ folderId: folder.id, taskIndex: index })}
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    if (!draggedTaskInfo) return;
+
+                                                    const bounding = e.currentTarget.getBoundingClientRect();
+                                                    const offset = e.clientY - bounding.top;
+                                                    const dropBefore = offset < bounding.height / 2;
+                                                    const newIndex = dropBefore ? index : index + 1;
+
+                                                    setFolders(prevFolders => {
+                                                        // Clone the entire folders array
+                                                        const updatedFolders = prevFolders.map(f => ({
+                                                            ...f,
+                                                            tasks: [...f.tasks]
+                                                        }));
+
+                                                        const sourceFolder = updatedFolders.find(f => f.id === draggedTaskInfo.folderId);
+                                                        const targetFolder = updatedFolders.find(f => f.id === folder.id);
+
+                                                        if (!sourceFolder || !targetFolder) return prevFolders;
+
+                                                        // Remove the moved task from the source folder tasks
+                                                        const [movedTask] = sourceFolder.tasks.splice(draggedTaskInfo.taskIndex, 1);
+
+                                                        // Adjust insertion index if moving down within the same folder
+                                                        let adjustedIndex = newIndex;
+                                                        if (folder.id === draggedTaskInfo.folderId && newIndex > draggedTaskInfo.taskIndex) {
+                                                            adjustedIndex = newIndex - 1;
+                                                        }
+
+                                                        // Insert moved task at the new index in target folder
+                                                        targetFolder.tasks.splice(adjustedIndex, 0, movedTask);
+
+                                                        return updatedFolders;
+                                                    });
+
+                                                    setDraggedTaskInfo(null);
+                                                }}
+                                                onDragEnd={() => setDraggedTaskInfo(null)}
                                             >
                                                 <input
                                                     type="checkbox"
@@ -184,6 +310,17 @@ const StudyTracker = () => {
                                                     onChange={() => toggleComplete(folder.id, index)}
                                                 />
                                                 <span>{task.text}</span>
+                                                {task.deadline && task.startDate && (
+                                                    <div className="progress-wrapper">
+                                                        <div className="progress-container">
+                                                            <div
+                                                                className="progress-bar"
+                                                                style={{ width: `${calculateProgress(task.startDate, task.deadline)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <span className="due-date-label">{getDaysLeft(task.deadline)}</span>
+                                                    </div>
+                                                )}
                                                 <div className="task-buttons">
                                                     <button onClick={() => editTask(folder.id, index)}>✏️</button>
                                                     <button onClick={() => deleteTask(folder.id, index)}>❌</button>
@@ -198,7 +335,7 @@ const StudyTracker = () => {
                 </div>
 
                 <div className="middle-column">
-                    <div className="image-container">{/* Optional image area */}</div>
+                    <div className="image-container"></div>
                     <div className="achievements-bar" onClick={toggleAchievements}>
                         Achievements + Statistics
                     </div>
