@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import "./Admin.css";
-import Nav_Admin from "../Nav_Admin/Nav_Admin";
+import NavAdmin from "../NavAdmin/NavAdmin";
 import Footer from "../Footer/Footer";
 
 const Admin = () => {
@@ -35,7 +35,7 @@ const Admin = () => {
 
     return (
         <div className="page-container">
-            <Nav_Admin />
+            <NavAdmin />
 
             <div className="admin-content-wrapper">
 

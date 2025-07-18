@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Nav_User from "../Nav_User/Nav_User";
+import NavUser from "../NavUser/NavUser";
 import Footer from "../Footer/Footer";
 import "../Home/Home.css";
 import "./StudyInterface.css";
@@ -133,7 +133,7 @@ const StudyTracker = () => {
 
     return (
         <div className="page-container">
-            <Nav_User />
+            <NavUser />
 
             <div className="dashboard">
                 <div className="sidebar">

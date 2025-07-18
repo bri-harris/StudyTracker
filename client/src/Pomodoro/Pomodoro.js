@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "./Pomodoro.css";
-import Nav_User from "../Nav_User/Nav_User";
+import NavUser from "../NavUser/NavUser";
 import Footer from "../Footer/Footer";
 
 const Pomodoro = () => {
@@ -57,7 +57,7 @@ const Pomodoro = () => {
 
     return (
         <div className="page-container">
-            <Nav_User />
+            <NavUser />
 
             <div className="content-wrapper">
 

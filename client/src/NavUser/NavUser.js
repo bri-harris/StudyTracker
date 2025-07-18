@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import "./Nav_Admin.css";
+import "./NavUser.css";
 
-const Nav_Admin = () => {
+const NavUser = () => {
   const navigate = useNavigate();
 
   return (
@@ -21,6 +21,24 @@ const Nav_Admin = () => {
         <div
           className="header-option-container"
           onClick={() => {
+            navigate(`/study`);
+          }}
+        >
+          <div className="header-option-text">Study</div>
+        </div>
+
+        <div
+          className="header-option-container"
+          onClick={() => {
+            navigate(`/pomodoro`);
+          }}
+        >
+          <div className="header-option-text">Pomodoro</div>
+        </div>
+
+        <div
+          className="header-option-container"
+          onClick={() => {
             navigate(`/`);
           }}
         >
@@ -32,4 +50,4 @@ const Nav_Admin = () => {
   );
 };
 
-export default Nav_Admin;
+export default NavUser;
