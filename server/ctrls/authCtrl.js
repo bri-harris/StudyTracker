@@ -40,7 +40,7 @@ const handleLogin = async (req, res) => {
         res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
         // res.cookie('jwt', refreshToken, {httpOnly: true, sameSite:'None', secure: true, maxAge: 24 * 60 * 60 * 1000});
 
-        res.json({ accessToken }); //send access token to user
+        res.json({ accessToken, roles: foundUser.roles }); //send access token to user
     } else {
         res.sendStatus(401);
     }

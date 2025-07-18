@@ -13,21 +13,25 @@ function SignIn() {
   const navigate = useNavigate()
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     axios.post("http://localhost:5000/auth", { email, pwd })
-      .then(result => {
-        console.log(result)
-        if (result.status === 200) {
-          navigate("/study")
+    .then(result => {
+      console.log(result);
+      if (result.status === 200) {
+        const roles = result.data.roles;
+        if (roles && roles.Admin) {
+          navigate("/admin");
         } else {
-          navigate("/register")
-          alert("You are not registered to this service")
-
+          navigate("/study");
         }
+      } else {
+        navigate("/register");
+        alert("You are not registered to this service");
+      }
+    })
+    .catch(err => console.log(err))
+  };
 
-      })
-      .catch(err => console.log(err))
-  }
 
 
   return (

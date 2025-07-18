@@ -43,25 +43,6 @@ const Navbar = () => {
         >
           <div className="header-option-text">Sign In</div>
         </div>
-
-        {/* <div
-          className="header-option-container"
-          onClick={() => {
-            navigate(`/study`);
-          }}
-        >
-          <div className="header-option-text">Study</div>
-        </div> */}
-
-        {/* <div
-          className="header-option-container"
-          onClick={() => {
-            navigate(`/pomodoro`);
-          }}
-        >
-          <div className="header-option-text">Pomodoro</div>
-        </div> */}
-
       </div>
     </div>
   );

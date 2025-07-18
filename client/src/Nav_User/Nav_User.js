@@ -17,24 +17,6 @@ const Nav_User = () => {
 
       {/* Container for Home and Team options */}
       <div className="nav-options">
-        
-        {/* <div
-          className="header-option-container"
-          onClick={() => {
-            navigate(`/team`);
-          }}
-        >
-          <div className="header-option-text">Team</div>
-        </div> */}
-
-        {/* <div
-          className="header-option-container"
-          onClick={() => {
-            navigate(`/signin`);
-          }}
-        >
-          <div className="header-option-text">Sign In</div>
-        </div> */}
 
         <div
           className="header-option-container"

@@ -5,7 +5,6 @@ import Footer from "../Footer/Footer";
 
 const Admin = () => {
 
-    // create a state variable that will contain the backend data retreived from backend API
     const [backendData, setBackendData] = useState([{}])
     useEffect(() => {
         fetch("/api").then(
@@ -17,11 +16,28 @@ const Admin = () => {
         )
     }, [])
 
+    //This function is NOT working correctly yet
+    const handleRemove = (user) => {
+    fetch(`/removeStudent/${user}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+        if (data.success) {
+            setBackendData(prevData => ({
+            ...prevData,
+            users: prevData.users.filter(u => u !== user)
+            }));
+        } else {
+            console.error("Failed to remove student");
+        }
+        })
+        .catch(error => console.error("Error:", error));
+    };
+
     return (
         <div className="page-container">
             <Nav_Admin />
 
-            <div className="content-wrapper">
+            <div className="admin-content-wrapper">
 
                 <div className="description">
                     <div className="desc-header">Class Roster</div>
@@ -30,15 +46,26 @@ const Admin = () => {
                         that do not belong in the registry!
                         <br />
                         <br />
-                        {(typeof backendData.users === 'undefined') ? (<p>Loading...</p>)
-                        : (
-                            backendData.users.map((user, i) => (
-                                <p key={i}>{user}</p>
-                            ))
-                        )}
+                    </div>
+
+                    <div className="desc-header">Students:</div>
+
+                    <div className='desc-text'>
+                    {(typeof backendData.users === 'undefined') ? (<p>Loading...</p>) :
+                        backendData.users.map((user, i) => (
+                        <div key={i} className="student-item">
+                            <p className="student-name">{user}</p>
+                            <button 
+                            className="remove-btn" 
+                            onClick={() => handleRemove(user)}
+                            >
+                            Remove
+                            </button>
+                        </div>
+                        ))
+                    }
                     </div>
                 </div>
-
             </div>
 
             <Footer />
