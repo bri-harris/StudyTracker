@@ -6,6 +6,7 @@ import SignIn from '../SignIn/SignIn';
 import Register from '../Register/Register';
 import Study from '../StudyInterface/StudyInterface';
 import Pomodoro from '../Pomodoro/Pomodoro';
+import Admin from '../Admin/Admin';
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/register" exact element={<Register />} />
         <Route path="/study" exact element={<Study />} />
         <Route path="/pomodoro" exact element={<Pomodoro />} />
+        <Route path="/admin" exact element={<Admin />} />
 
       </Routes>
     </BrowserRouter>

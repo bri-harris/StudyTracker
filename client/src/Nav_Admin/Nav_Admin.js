@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import "./Navbar.css";
+import "./Nav_Admin.css";
 
-const Navbar = () => {
+const Nav_Admin = () => {
   const navigate = useNavigate();
 
   return (
@@ -17,32 +17,24 @@ const Navbar = () => {
 
       {/* Container for Home and Team options */}
       <div className="nav-options">
-        <div
-          className="header-option-container"
-          onClick={() => {
-            navigate(`/`);
-          }}
-        >
-          <div className="header-option-text">Home</div>
-        </div>
-
-        <div
+        
+        {/* <div
           className="header-option-container"
           onClick={() => {
             navigate(`/team`);
           }}
         >
           <div className="header-option-text">Team</div>
-        </div>
+        </div> */}
 
-        <div
+        {/* <div
           className="header-option-container"
           onClick={() => {
             navigate(`/signin`);
           }}
         >
           <div className="header-option-text">Sign In</div>
-        </div>
+        </div> */}
 
         {/* <div
           className="header-option-container"
@@ -62,9 +54,18 @@ const Navbar = () => {
           <div className="header-option-text">Pomodoro</div>
         </div> */}
 
+        <div
+          className="header-option-container"
+          onClick={() => {
+            navigate(`/`);
+          }}
+        >
+          <div className="header-option-text">Log Out</div>
+        </div>
+
       </div>
     </div>
   );
 };
 
-export default Navbar;
+export default Nav_Admin;
