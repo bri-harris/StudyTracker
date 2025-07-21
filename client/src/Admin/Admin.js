@@ -16,9 +16,8 @@ const Admin = () => {
         )
     }, [])
 
-    //This function is NOT working correctly yet
     const handleRemove = (user) => {
-    fetch(`/removeStudent/${user}`, { method: 'DELETE' })
+    fetch(`/removeStudent/${user}`, { method: 'DELETE', credentials: 'include' })
         .then(response => response.json())
         .then(data => {
         if (data.success) {
