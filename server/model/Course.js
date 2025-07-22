@@ -1,23 +1,18 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const model = mongoose.model;
 
 //objectID is automatically created by mongoose
-const taskSchema = new Schema({
-    taskname: {
+const courseSchema = new Schema({
+    courseName: {
         type: String,
         required: true
     },
-    courseAssociation: {
-        type: String,
-        required: true
-    },
-    completed: {
-        type: Boolean,
-        required: true,
-        default: false
+    user: {
+        type: mongoose.Types.ObjectId, ref: "User"
     }
 })
 
 
 //by default when mongoose creates the "Task" model, it will set it to lowercase and plural, so will look for an "tasks" collection in mongodb
-module.exports = mongoose.model("Task", taskSchema);
+module.exports = mongoose.model("Task", courseSchema);
