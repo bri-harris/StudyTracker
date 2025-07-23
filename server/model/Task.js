@@ -7,13 +7,9 @@ const taskSchema = new Schema({
         type: String,
         required: true
     },
-    tasktype: {
+    courseAssociation: {
         type: String,
         required: true
-    },
-    duedate: {
-        type: Date,
-        required: false
     },
     completed: {
         type: Boolean,
@@ -23,5 +19,5 @@ const taskSchema = new Schema({
 })
 
 
-//by default when mongoose creates the "Task" model, it will set it to lowercase and plural, so will look for an "tasks" collection in mongodb
+//by default when mongoose creates the "TaskTest" model, it will set it to lowercase and plural, so will look for an "tasks" collection in mongodb
 module.exports = mongoose.model("Task", taskSchema);

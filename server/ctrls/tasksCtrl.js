@@ -7,14 +7,14 @@ const getAllTasks = async (req, res) => {
 }
 
 const createNewTask = async (req, res) => {
-    if (!req?.body?.taskname || !req?.body?.tasktype) {
+    if (!req?.body?.taskname || !req?.body?.courseAssociation) {
         return res.status(400).json({ "message": "Task name and type are required." });
     }
     try {
         //create and store the new task record with mongoose
         const result = await Task.create({
             taskname: req.body.taskname,
-            tasktype: req.body.tasktype
+            courseAssociation: req.body.courseAssociation
         });
         res.status(201).json(result);
     } catch (err) {
@@ -33,7 +33,7 @@ const updateTask = async (req, res) => {
         return res.status(204).json({ "message": `No task with id: ${req.body.id} found.` });
     }
     if (req.body?.taskname) task.taskname = req.body.taskname;
-    if (req.body?.tasktype) task.tasktype = req.body.tasktype;
+    if (req.body?.courseAssociation) task.courseAssociation = req.body.courseAssociation;
     const result = await task.save(); //this is the task document we found and modified
     res.json(result);
 }

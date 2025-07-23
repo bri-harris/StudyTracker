@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from '../api/axios'
 import NavUser from "../NavUser/NavUser";
 import Footer from "../Footer/Footer";
 import "../Home/Home.css";
@@ -20,11 +21,52 @@ const StudyTracker = () => {
     const [showTaskForm, setShowTaskForm] = useState(false);
 
     const [newFolderColor, setNewFolderColor] = useState("#ffb3b3");
-    const [newFolderName, setNewFolderName] = useState("");
+    const [courseName, setNewFolderName] = useState();
     const [newTask, setNewTask] = useState("");
     const [editIndex, setEditIndex] = useState(null);
     const [taskDeadline, setTaskDeadline] = useState("");
     const [taskStartDate, setTaskStartDate] = useState("");
+
+    // function courseList() {
+    //     const [courses, setCourses] = useState([]);
+
+
+    //     useEffect(() => {
+    //         const fetchCourses = async () => {
+    //             try {
+    //                 const response = await axios.get("/courses")
+    //                 console.log(response.data)
+    //             } catch (error) {
+    //                 console.error('Failed to fetch user profile:', error);
+    //             }
+
+    //         }
+    //         fetchCourses();
+    //     }, []);
+
+    //     const handleSubmitCourse = (e) => {
+    //         // e.preventDefault();
+    //         axios.post("/courses", { courseName })
+    //             .then(result => {
+    //                 if (result.status === 201) {
+    //                     console.log(result);
+    //                 }
+    //             })
+    //             .catch(e => console.log(e))
+    //     };
+    // }
+
+    const handleSubmitCourse = (e) => {
+        // e.preventDefault();
+        axios.post("/courses", { courseName })
+            .then(result => {
+                if (result.status === 201) {
+                    console.log(result);
+                }
+            })
+            .catch(e => console.log(e))
+    };
+
 
     const calculateProgress = (startDate, deadline) => {
         const start = new Date(startDate);
@@ -176,13 +218,13 @@ const StudyTracker = () => {
                             <button onClick={addTask}>Add</button>
                         </div>
                     )}
-
+                    {/*where to do course add */}
                     {showFolderForm && (
                         <div className="folder-form">
                             <input
                                 type="text"
                                 placeholder="Folder name"
-                                value={newFolderName}
+                                value={courseName}
                                 onChange={(e) => setNewFolderName(e.target.value)}
                             />
                             <input
@@ -192,13 +234,14 @@ const StudyTracker = () => {
                             />
                             <button
                                 onClick={() => {
-                                    if (!newFolderName.trim()) return;
+                                    if (!courseName.trim()) return;
                                     const newFolder = {
                                         id: Date.now(),
-                                        name: newFolderName.trim(),
+                                        name: courseName.trim(),
                                         color: newFolderColor,
                                         tasks: []
                                     };
+                                    handleSubmitCourse();
                                     setFolders([...folders, newFolder]);
                                     setNewFolderName("");
                                     setNewFolderColor("#ffb3b3");
@@ -360,7 +403,7 @@ const StudyTracker = () => {
             {/* <div className="main"></div> */}
             <Footer />
         </div>
-        
+
     );
 };
 

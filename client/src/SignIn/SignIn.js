@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import axios from 'axios'
+import axios from '../api/axios'
 import { useNavigate } from "react-router-dom";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import './SignIn.css';
+axios.defaults.withCredentials = true; // trying to send cookies
 
 function SignIn() {
 
@@ -12,24 +13,29 @@ function SignIn() {
   const [pwd, setPassword] = useState()
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios.post("http://localhost:5000/auth", { email, pwd })
-    .then(result => {
-      console.log(result);
-      if (result.status === 200) {
-        const roles = result.data.roles;
-        if (roles && roles.Admin) {
-          navigate("/admin");
+    axios.post("/auth",
+      { email, pwd },                  // This is your request body
+      // { withCredentials: true }        // This is your Axios config which is imported from ../api
+    )
+      .then(async result => {
+        console.log(result);
+        if (result.status === 200) {
+          const roles = result.data.roles;
+          if (roles && roles.Admin) {
+            navigate("/admin");
+          } else {
+            navigate("/study");
+            const response = await axios.get("/courses")
+            console.log(response.data)
+          }
         } else {
-          navigate("/study");
+          navigate("/register");
+          alert("You are not registered to this service");
         }
-      } else {
-        navigate("/register");
-        alert("You are not registered to this service");
-      }
-    })
-    .catch(err => console.log(err))
+      })
+      .catch(err => console.log(err))
   };
 
 
