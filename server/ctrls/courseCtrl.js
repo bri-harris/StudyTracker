@@ -1,7 +1,6 @@
 const Course = require('../model/Course');
 const User = require('../model/User');
 const mongoose = require('mongoose');
-const toID = mongoose.Types.ObjectId;
 
 const createNewCourse = async (req, res) => {
     if (!req?.body?.courseName) {
@@ -11,32 +10,59 @@ const createNewCourse = async (req, res) => {
     //     return res.status(400).json({ "message": "Course name and User Association are required." });
     // }
     try {
+        const token = req.cookies?.jwt;
+        if (!token) {
+            return res.status(401).json({ message: 'No token found in cookies' });
+        }
+        const foundUser = await User.findOne({ token });
+        console.log("found user: ", foundUser.name)
+        console.log("User's _id", foundUser._id)
+
+
         //create and store the new course record with mongoose
-        const result = await Course.create({
-            courseName: req.body.courseName
+        const newCourse = await Course.create({
+            courseName: req.body.courseName,
+            user: foundUser._id
         });
-        res.status(201).json(result);
-        // connectCourseToUser();
+        //push the course's objectId onto the users courses array
+        foundUser.courses = foundUser.courses || [];
+        foundUser.courses.push(newCourse._id);
+
+        //save the change
+        await foundUser.save();
+
+        //http 201 means created successfully
+        res.status(201).json(newCourse);
+
 
     } catch (err) {
         console.error(err);
     }
 }
 
-const connectCourseToUser = async (req, res) => {
-    //the cookie is stored on the client,
-    const cookies = req.cookies;
-    const refreshToken = cookies.jwt;
-    //foundUser is a mongoose document that we found and can now modify and save
-    const foundUser = await User.findOne({ refreshToken }).exec();
+const getAllCourses = async (req, res) => {
+    try {
+        const token = req.cookies?.jwt;
+        if (!token) {
+            return res.status(401).json({ message: 'No token found in cookies' });
+        }
+        const foundUser = await User.findOne({ token }).populate('courses');
+        console.log("found user: ", foundUser.name, ", ", "User's _id", foundUser._id)
 
-    console.log("found user: ")
-    console.log(foundUser.name)
-    req.body.user = toID(req.body.user)
-    const course = await Course.findById(req.body.courseName)
-    course.user = req.body.user;
-    course.save()
-    // res.json(course)
+
+        // - MongoDB still holds only ObjectIds
+        // - In your Node.js memory, user.courses becomes full Course documents.
+        // Populate just makes your JavaScript code nicer, not the stored documents richer.
+        // foundUser.courses.forEach(course => {
+        //     console.log(course.courseName);     // Full field from Course model
+        //     console.log(course._id);            // Still has ObjectId
+        // });
+
+        res.json(foundUser);
+
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 const updateCourse = async (req, res) => {
@@ -68,6 +94,7 @@ const deleteCourse = async (req, res) => {
 
 module.exports = {
     createNewCourse,
+    getAllCourses,
     updateCourse,
     deleteCourse
 };

@@ -5,6 +5,7 @@ const path = require('path');
 const cors = require('cors');
 const corsOptions = require('./config/corsOptions');
 const validateJWTToken = require('./middleware/validateJWTToken');
+const validateCookie = require('./middleware/validateCookie');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const connectDB = require('./config/dbConn');
@@ -47,7 +48,7 @@ app.use('/refresh', require('./routes/refresh')); //refresh token might not be n
 app.use('/logout', require('./routes/logout')); //refresh token might not be needed
 
 //need a valid session and JWT Token for all routes below
-app.use(validateJWTToken)
+app.use(validateCookie)
 app.use('/tasks', require('./routes/api/tasks'))
 app.use('/courses', require('./routes/api/courses'))
 

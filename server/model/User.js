@@ -22,14 +22,18 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
+    token: {
+        type: String,
+        required: false
+    },
     refreshToken: {
         type: String,
         required: false
     },
-    course: {
-        type: mongoose.Types.ObjectId, ref: "Course"
-    }
-
+    courses: [{
+        type: Schema.Types.ObjectId,
+        ref: "Course"
+    }]
 });
 
 module.exports = mongoose.model("User", UserSchema);
