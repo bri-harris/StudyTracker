@@ -30,7 +30,7 @@ app.use(cookieParser())
 app.get("/api", async (req, res) => {
     try {
         const users = await User.find({}, 'name roles');
-        const filtered = users.filter(user => !user.roles || !user.roles.Admin); 
+        const filtered = users.filter(user => !user.roles || !user.roles.Admin);
         const usernames = filtered.map(user => user.name);
         res.json({ users: usernames });
     } catch (err) {
@@ -47,8 +47,9 @@ app.use('/refresh', require('./routes/refresh')); //refresh token might not be n
 app.use('/logout', require('./routes/logout')); //refresh token might not be needed
 
 //need a valid session and JWT Token for all routes below
-//app.use(validateJWTToken)
+app.use(validateJWTToken)
 app.use('/tasks', require('./routes/api/tasks'))
+app.use('/courses', require('./routes/api/courses'))
 
 //backend server running on port 5000, client server (REACT) will be running on port 3000
 //We dont want to listen for requests if we dont connect to mongoose

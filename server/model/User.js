@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+
 const UserSchema = new Schema({
     name: {
         type: String,
@@ -21,7 +22,14 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
-    refreshToken: String
+    refreshToken: {
+        type: String,
+        required: false
+    },
+    course: {
+        type: mongoose.Types.ObjectId, ref: "Course"
+    }
+
 });
 
 module.exports = mongoose.model("User", UserSchema);

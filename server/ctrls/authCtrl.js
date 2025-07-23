@@ -14,6 +14,14 @@ const handleLogin = async (req, res) => {
         const roles = Object.values(foundUser.roles);
 
         //create access & refresh token here
+        // const accessToken =
+        // {
+        //     "UserInfo": {
+        //         "email": foundUser.email,
+        //         "roles": roles
+        //     }
+        // }
+        // figure out how to decrypt this
         const accessToken = jwt.sign(
             //pass in a payload
             {
@@ -34,7 +42,9 @@ const handleLogin = async (req, res) => {
         //foundUser is a mongoose document grabbed from DB
         foundUser.refreshToken = refreshToken;
         const result = await foundUser.save();
-        console.log(result);
+        // console.log(result);
+        console.log("this is result._id");
+        console.log(result._id);
 
         //send refresh token as http cookie
         res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });

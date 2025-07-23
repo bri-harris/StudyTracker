@@ -13,6 +13,4 @@ const courseSchema = new Schema({
     }
 })
 
-
-//by default when mongoose creates the "Task" model, it will set it to lowercase and plural, so will look for an "tasks" collection in mongodb
-module.exports = mongoose.model("Task", courseSchema);
+module.exports = mongoose.model("Course", courseSchema);
