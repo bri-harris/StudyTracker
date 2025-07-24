@@ -27,44 +27,45 @@ const StudyTracker = () => {
     const [taskDeadline, setTaskDeadline] = useState("");
     const [taskStartDate, setTaskStartDate] = useState("");
 
-    // function courseList() {
-    //     const [courses, setCourses] = useState([]);
-
-
-    //     useEffect(() => {
-    //         const fetchCourses = async () => {
-    //             try {
-    //                 const response = await axios.get("/courses")
-    //                 console.log(response.data)
-    //             } catch (error) {
-    //                 console.error('Failed to fetch user profile:', error);
-    //             }
-
-    //         }
-    //         fetchCourses();
-    //     }, []);
-
-    //     const handleSubmitCourse = (e) => {
-    //         // e.preventDefault();
-    //         axios.post("/courses", { courseName })
-    //             .then(result => {
-    //                 if (result.status === 201) {
-    //                     console.log(result);
-    //                 }
-    //             })
-    //             .catch(e => console.log(e))
-    //     };
-    // }
-
+    useEffect(() => {
+        fetch('/courses')
+            .then(res => res.json())
+            .then(data => {
+                console.log("API response:", data);
+                const formatted = data.courses.map((course, index) => ({
+                    id: course._id,
+                    name: course.courseName,
+                    tasks: []
+                }));
+                setFolders(formatted);
+                console.log("Updated folders:", formatted);
+            })
+            .catch(err => console.error("Error fetching courses:", err));
+    }, []);
+ 
     const handleSubmitCourse = (e) => {
-        // e.preventDefault();
+        e.preventDefault();
+
+        if (!courseName.trim()) return;
+
         axios.post("/courses", { courseName })
             .then(result => {
                 if (result.status === 201) {
-                    console.log(result);
+                    const newFolder = {
+                        id: result.data._id,
+                        name: result.data.courseName,
+                        color: newFolderColor,
+                        tasks: []
+                    };
+
+                    setFolders(prevFolders => [...prevFolders, newFolder]);
+
+                    setNewFolderName("");
+                    setNewFolderColor("#ffb3b3");
+                    setShowFolderForm(false);
                 }
             })
-            .catch(e => console.log(e))
+            .catch(e => console.log(e));
     };
 
 
@@ -233,19 +234,10 @@ const StudyTracker = () => {
                                 onChange={(e) => setNewFolderColor(e.target.value)}
                             />
                             <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.preventDefault();
                                     if (!courseName.trim()) return;
-                                    const newFolder = {
-                                        id: Date.now(),
-                                        name: courseName.trim(),
-                                        color: newFolderColor,
-                                        tasks: []
-                                    };
-                                    handleSubmitCourse();
-                                    setFolders([...folders, newFolder]);
-                                    setNewFolderName("");
-                                    setNewFolderColor("#ffb3b3");
-                                    setShowFolderForm(false);
+                                    handleSubmitCourse(e);
                                 }}
                             >
                                 Create
@@ -254,7 +246,8 @@ const StudyTracker = () => {
                     )}
 
                     <ul className="folder-list">
-                        {folders.map((folder, folderIndex) => (
+                        {folders.length > 0 ? (
+                            folders.map((folder, folderIndex) => (
                             <li
                                 key={folder.id}
                                 className="folder-item"
@@ -373,7 +366,10 @@ const StudyTracker = () => {
                                     </ul>
                                 )}
                             </li>
-                        ))}
+                            ))
+                        ) : (
+                            <p>Loading...</p>
+                        )}
                     </ul>
                 </div>
 
