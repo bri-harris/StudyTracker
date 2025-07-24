@@ -317,7 +317,7 @@ const StudyTracker = () => {
                         {showAddMenu && (
                             <div className="add-dropdown">
                                 <div onClick={() => { setShowFolderForm(true); setShowTaskForm(false); setShowAddMenu(false); }}>
-                                    📁 Add Folder
+                                    📁 Add Course
                                 </div>
                                 <div onClick={() => { setShowTaskForm(true); setShowFolderForm(false); setShowAddMenu(false); }}>
                                     ➕ Add Task
