@@ -1,10 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const path = require('path');
 const cors = require('cors');
 const corsOptions = require('./config/corsOptions');
-const validateJWTToken = require('./middleware/validateJWTToken');
 const validateCookie = require('./middleware/validateCookie');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
@@ -40,20 +38,18 @@ app.get("/api", async (req, res) => {
     }
 });
 
-app.use('/', require('./routes/removeStudent'));
 app.use('/', require('./routes/root'));
 app.use('/register', require('./routes/register'));
 app.use('/auth', require('./routes/auth'));
-app.use('/refresh', require('./routes/refresh')); //refresh token might not be needed
-app.use('/logout', require('./routes/logout')); //refresh token might not be needed
+// app.use('/logout', require('./routes/logout')); //logout route needs to actually work
 
-//need a valid session and JWT Token for all routes below
+//need a valid session and JWT Token in the Cookie for routes below
 app.use(validateCookie)
 app.use('/tasks', require('./routes/api/tasks'))
 app.use('/courses', require('./routes/api/courses'))
 
-//backend server running on port 5000, client server (REACT) will be running on port 3000
-//We dont want to listen for requests if we dont connect to mongoose
+//backend server on port 5000, client server (REACT) running on port 3000
+//only listen for requests if we dont connect to mongoose
 mongoose.connection.once('open', () => {
     console.log("Connected to MongoDB");
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

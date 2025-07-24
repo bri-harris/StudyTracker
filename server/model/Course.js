@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const model = mongoose.model;
 
 //objectID is automatically created by mongoose
 const courseSchema = new Schema({
@@ -10,7 +9,11 @@ const courseSchema = new Schema({
     },
     user: {
         type: mongoose.Types.ObjectId, ref: "User"
-    }
+    },
+    tasks: [{
+        type: Schema.Types.ObjectId,
+        ref: "Task"
+    }]
 })
 
 module.exports = mongoose.model("Course", courseSchema);
