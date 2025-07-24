@@ -38,10 +38,10 @@ app.get("/api", async (req, res) => {
     }
 });
 
+app.use('/', require('./routes/removeStudent'));
 app.use('/', require('./routes/root'));
 app.use('/register', require('./routes/register'));
 app.use('/auth', require('./routes/auth'));
-// app.use('/logout', require('./routes/logout')); //logout route needs to actually work
 
 //need a valid session and JWT Token in the Cookie for routes below
 app.use(validateCookie)
