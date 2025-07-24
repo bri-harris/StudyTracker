@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from '../api/axios'
 import NavUser from "../NavUser/NavUser";
 import Footer from "../Footer/Footer";
 import "../Home/Home.css";
@@ -21,11 +22,53 @@ const StudyTracker = () => {
     const [sortModes, setSortModes] = useState({});
 
     const [newFolderColor, setNewFolderColor] = useState("#ffb3b3");
-    const [newFolderName, setNewFolderName] = useState("");
+    const [courseName, setNewFolderName] = useState();
     const [newTask, setNewTask] = useState("");
     const [editIndex, setEditIndex] = useState(null);
     const [taskDeadline, setTaskDeadline] = useState("");
     const [taskStartDate, setTaskStartDate] = useState("");
+
+    useEffect(() => {
+        fetch('/courses')
+            .then(res => res.json())
+            .then(data => {
+                console.log("API response:", data);
+                const formatted = data.courses.map((course, index) => ({
+                    id: course._id,
+                    name: course.courseName,
+                    tasks: []
+                }));
+                setFolders(formatted);
+                console.log("Updated folders:", formatted);
+            })
+            .catch(err => console.error("Error fetching courses:", err));
+    }, []);
+ 
+    const handleSubmitCourse = (e) => {
+        e.preventDefault();
+
+        if (!courseName.trim()) return;
+
+        axios.post("/courses", { courseName })
+            .then(result => {
+                if (result.status === 201) {
+                    const newFolder = {
+                        id: result.data._id,
+                        name: result.data.courseName,
+                        color: newFolderColor,
+                        tasks: []
+                    };
+
+                    setFolders(prevFolders => [...prevFolders, newFolder]);
+
+                    setNewFolderName("");
+                    setNewFolderColor("#ffb3b3");
+                    setShowFolderForm(false);
+                }
+            })
+            .catch(e => console.log(e));
+    };
+
 
     const calculateProgress = (startDate, deadline) => {
         const start = new Date(startDate);
@@ -307,13 +350,13 @@ const StudyTracker = () => {
                             <button onClick={addTask}>Add</button>
                         </div>
                     )}
-
+                    {/*where to do course add */}
                     {showFolderForm && (
                         <div className="folder-form">
                             <input
                                 type="text"
                                 placeholder="Folder name"
-                                value={newFolderName}
+                                value={courseName}
                                 onChange={(e) => setNewFolderName(e.target.value)}
                             />
                             <input
@@ -322,18 +365,10 @@ const StudyTracker = () => {
                                 onChange={(e) => setNewFolderColor(e.target.value)}
                             />
                             <button
-                                onClick={() => {
-                                    if (!newFolderName.trim()) return;
-                                    const newFolder = {
-                                        id: Date.now(),
-                                        name: newFolderName.trim(),
-                                        color: newFolderColor,
-                                        tasks: []
-                                    };
-                                    setFolders([...folders, newFolder]);
-                                    setNewFolderName("");
-                                    setNewFolderColor("#ffb3b3");
-                                    setShowFolderForm(false);
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (!courseName.trim()) return;
+                                    handleSubmitCourse(e);
                                 }}
                             >
                                 Create
@@ -342,7 +377,8 @@ const StudyTracker = () => {
                     )}
 
                     <ul className="folder-list">
-                        {folders.map((folder, folderIndex) => (
+                        {folders.length > 0 ? (
+                            folders.map((folder, folderIndex) => (
                             <li
                                 key={folder.id}
                                 className="folder-item"
@@ -466,7 +502,10 @@ const StudyTracker = () => {
                                     </ul>
                                 )}
                             </li>
-                        ))}
+                            ))
+                        ) : (
+                            <p>Loading...</p>
+                        )}
                     </ul>
                 </div>
 
