@@ -7,9 +7,8 @@ const taskSchema = new Schema({
         type: String,
         required: true
     },
-    courseAssociation: {
-        type: String,
-        required: true
+    course: {
+        type: mongoose.Types.ObjectId, ref: "Course"
     },
     completed: {
         type: Boolean,

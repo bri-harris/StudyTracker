@@ -41,7 +41,7 @@ const getAllCourses = async (req, res) => {
         // At runtime, in Node.js memory, user.courses becomes full Course documents with populate
         // Populate just makes your JavaScript code nicer, not the stored documents richer.
         const foundUser = await User.findOne({ token }).populate('courses');
-        res.json(foundUser);
+        res.status(201).json(foundUser);
     } catch (err) {
         console.error(err);
     }

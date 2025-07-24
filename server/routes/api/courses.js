@@ -4,14 +4,14 @@ const courseCtrl = require('../../ctrls/courseCtrl')
 const verifyJWTCookie = require('../../middleware/validateCookie');
 
 router.route('/')
-    //create a task
+    //create a course
     .post(verifyJWTCookie, courseCtrl.createNewCourse)
     //get the array of courses associated with a given user
     .get(verifyJWTCookie, courseCtrl.getAllCourses)
 
-// //update a tasks information
+// //update a course information
 // .put(courseCtrl.updateCourse)
-// //delete a task by ID
+// //delete a course by ID
 // .delete(courseCtrl.deleteCourse);
 
 module.exports = router;

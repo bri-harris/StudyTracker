@@ -43,13 +43,13 @@ app.use('/register', require('./routes/register'));
 app.use('/auth', require('./routes/auth'));
 // app.use('/logout', require('./routes/logout')); //logout route needs to actually work
 
-//need a valid session and JWT Token for all routes below
+//need a valid session and JWT Token in the Cookie for routes below
 app.use(validateCookie)
 app.use('/tasks', require('./routes/api/tasks'))
 app.use('/courses', require('./routes/api/courses'))
 
-//backend server running on port 5000, client server (REACT) will be running on port 3000
-//We dont want to listen for requests if we dont connect to mongoose
+//backend server on port 5000, client server (REACT) running on port 3000
+//only listen for requests if we dont connect to mongoose
 mongoose.connection.once('open', () => {
     console.log("Connected to MongoDB");
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
