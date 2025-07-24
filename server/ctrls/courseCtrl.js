@@ -47,36 +47,36 @@ const getAllCourses = async (req, res) => {
     }
 }
 
-const updateCourse = async (req, res) => {
-    if (!req?.body?.id) {
-        return res.status(400).json({ "message": "ID parameter is required." });
-    }
+// const updateCourse = async (req, res) => {
+//     if (!req?.body?.id) {
+//         return res.status(400).json({ "message": "ID parameter is required." });
+//     }
 
-    //find and define the course
-    const course = await Course.findOne({ _id: req.body.id }).exec();
-    if (!course) {
-        return res.status(204).json({ "message": `No course with id: ${req.body.id} found.` });
-    }
-    if (req.body?.courseName) course.courseName = req.body.courseName;
-    if (req.body?.user) course.user = req.body.user;
-    const result = await course.save(); //this is the course document we found and modified
-    res.json(result);
-}
+//     //find and define the course
+//     const course = await Course.findOne({ _id: req.body.id }).exec();
+//     if (!course) {
+//         return res.status(204).json({ "message": `No course with id: ${req.body.id} found.` });
+//     }
+//     if (req.body?.courseName) course.courseName = req.body.courseName;
+//     if (req.body?.user) course.user = req.body.user;
+//     const result = await course.save(); //this is the course document we found and modified
+//     res.json(result);
+// }
 
-const deleteCourse = async (req, res) => {
-    if (!req?.body?.id) return res.status(400).json({ "message": "Course ID required." });
+// const deleteCourse = async (req, res) => {
+//     if (!req?.body?.id) return res.status(400).json({ "message": "Course ID required." });
 
-    const course = await Course.findOne({ _id: req.body.id }).exec();
-    if (!course) {
-        return res.status(204).json({ "message": `No course with id: ${req.body.id} found.` });
-    }
-    const result = await course.deleteOne({ _id: req.body.id });
-    res.json(result);
-}
+//     const course = await Course.findOne({ _id: req.body.id }).exec();
+//     if (!course) {
+//         return res.status(204).json({ "message": `No course with id: ${req.body.id} found.` });
+//     }
+//     const result = await course.deleteOne({ _id: req.body.id });
+//     res.json(result);
+// }
 
 module.exports = {
     createNewCourse,
-    getAllCourses,
-    updateCourse,
-    deleteCourse
+    getAllCourses
+    // updateCourse,
+    // deleteCourse
 };

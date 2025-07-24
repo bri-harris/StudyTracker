@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const model = mongoose.model;
 
 //objectID is automatically created by mongoose
 const courseSchema = new Schema({
