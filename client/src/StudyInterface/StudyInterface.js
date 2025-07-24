@@ -12,12 +12,13 @@ const StudyTracker = () => {
     const [folders, setFolders] = useState([]);
     const [selectedFolderId, setSelectedFolderId] = useState(null);
 
-    const [draggedTaskInfo, setDraggedTaskInfo] = useState(null); // { folderId, taskIndex }
+    const [draggedTaskInfo, setDraggedTaskInfo] = useState(null);
     const [draggedFolderIndex, setDraggedFolderIndex] = useState(null);
 
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [showFolderForm, setShowFolderForm] = useState(false);
     const [showTaskForm, setShowTaskForm] = useState(false);
+    const [sortModes, setSortModes] = useState({});
 
     const [newFolderColor, setNewFolderColor] = useState("#ffb3b3");
     const [newFolderName, setNewFolderName] = useState("");
@@ -57,6 +58,85 @@ const StudyTracker = () => {
         return `${dayDiff} days left`;
     };
 
+    const priorities = {
+        urgent: { color: "#e53935", label: "Urgent" },
+        high: { color: "#fb8c00", label: "High" },
+        medium: { color: "#fdd835", label: "Medium" },
+        low: { color: "#43a047", label: "Low" },
+    };
+
+    const handlePriorityCycle = (folderId, taskIndex) => {
+        setFolders(prev =>
+            prev.map(folder => {
+                if (folder.id !== folderId) return folder;
+
+                const updatedTasks = folder.tasks.map((task, index) => {
+                    if (index !== taskIndex) return task;
+
+                    const order = ["urgent", "high", "medium", "low"];
+                    const currentIndex = order.indexOf(task.priority || "medium");
+                    const nextPriority = order[(currentIndex + 1) % order.length];
+
+                    return { ...task, priority: nextPriority };
+                });
+
+                return { ...folder, tasks: updatedTasks };
+            })
+        );
+    };
+
+    const toggleSortMode = () => {
+        const folderId = selectedFolderId;
+        if (!folderId) return;
+
+        const modes = ["none", "priority", "deadline"];
+        const currentMode = sortModes[folderId] || "none";
+        const currentIndex = modes.indexOf(currentMode);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        const nextMode = modes[nextIndex];
+
+        setFolders(prevFolders =>
+            prevFolders.map(folder => {
+                if (folder.id !== folderId) return folder;
+
+                if (nextMode === "none") {
+                    if (folder.tasksOriginal) {
+                        return {
+                            ...folder,
+                            tasks: folder.tasksOriginal,
+                            tasksOriginal: undefined,
+                        };
+                    }
+                    return folder;
+                }
+
+                const originalTasks = folder.tasksOriginal || folder.tasks;
+
+                const sortedTasks = [...folder.tasks].sort((a, b) => {
+                    if (nextMode === "priority") {
+                        const priorityOrder = ["urgent", "high", "medium", "low"];
+                        const aIndex = priorityOrder.indexOf(a.priority || "low");
+                        const bIndex = priorityOrder.indexOf(b.priority || "low");
+                        return aIndex - bIndex;
+                    } else if (nextMode === "deadline") {
+                        const aDate = a.deadline ? new Date(a.deadline) : new Date(8640000000000000);
+                        const bDate = b.deadline ? new Date(b.deadline) : new Date(8640000000000000);
+                        return aDate - bDate;
+                    }
+                    return 0;
+                });
+
+                return {
+                    ...folder,
+                    tasks: sortedTasks,
+                    tasksOriginal: originalTasks,
+                };
+            })
+        );
+
+        setSortModes(prev => ({ ...prev, [folderId]: nextMode }));
+    };
+
     const addTask = () => {
         if (!newTask.trim() || !selectedFolderId) return;
 
@@ -76,7 +156,8 @@ const StudyTracker = () => {
                         text: newTask,
                         completed: false,
                         startDate: taskStartDate || new Date().toISOString(),
-                        deadline: taskDeadline
+                        deadline: taskDeadline,
+                        priority: "medium"
                     });
                 }
 
@@ -131,6 +212,51 @@ const StudyTracker = () => {
         );
     };
 
+    const palettes = {
+        default: {
+            '--palette-bg': '#ffffff',
+            '--palette-dashboard-bg': '#f2c399',
+            '--palette-sidebar-bg': '#ffe0c4',
+            '--palette-widget-bg': '#ffe0c4',
+            '--palette-header-bg': '#f44336',
+            '--palette-header-text': 'white',
+            '--palette-add-btn': '#4caf50',
+            '--palette-task-bg': '#f9f9f9',
+            '--palette-task-done': '#888',
+            '--palette-hover': '#ffdad7',
+            '--palette-progress-bg': '#eee',
+            '--palette-progress-bar': '#4caf50',
+            '--accent': '#4caf50',
+        },
+        ocean: {
+            '--palette-bg': '#e0f7fa',
+            '--palette-dashboard-bg': '#b2ebf2',
+            '--palette-sidebar-bg': '#4dd0e1',
+            '--palette-widget-bg': '#80deea',
+            '--palette-header-bg': '#00796b',
+            '--palette-header-text': 'white',
+            '--palette-add-btn': '#00897b',
+            '--palette-task-bg': '#b2dfdb',
+            '--palette-task-done': '#004d40',
+            '--palette-hover': '#a7ffeb',
+            '--palette-progress-bg': '#e0f2f1',
+            '--palette-progress-bar': '#004d40',
+            '--accent': '#41489cff',
+        },
+        // Add more palettes if needed...
+    };
+
+    const applyPalette = (paletteName) => {
+        const root = document.documentElement;
+        const selected = palettes[paletteName];
+        if (!selected) return;
+
+        Object.entries(selected).forEach(([key, value]) => {
+            root.style.setProperty(key, value);
+        });
+    };
+
+
     return (
         <div className="page-container">
             <NavUser />
@@ -139,7 +265,12 @@ const StudyTracker = () => {
                 <div className="sidebar">
                     <div className="header">
                         To-Do List
-                        <button className="add-toggle" onClick={() => setShowAddMenu(!showAddMenu)}>+</button>
+                        <div className="button-group">
+                            <button className="add-toggle" onClick={() => setShowAddMenu(!showAddMenu)}>+</button>
+                            <button className="add-toggle" onClick={toggleSortMode} title={`Sort mode: ${sortModes[selectedFolderId] || "none"}`}>
+                                {sortModes[selectedFolderId] === "none" ? "=" : sortModes[selectedFolderId] === "priority" ? "↑" : "↓"}
+                            </button>
+                        </div>
                         {showAddMenu && (
                             <div className="add-dropdown">
                                 <div onClick={() => { setShowFolderForm(true); setShowTaskForm(false); setShowAddMenu(false); }}>
@@ -230,7 +361,7 @@ const StudyTracker = () => {
                                     const updated = [...folders];
                                     const [moved] = updated.splice(draggedFolderIndex, 1);
 
-                                    // Adjust newIndex if moving forward in the list
+
                                     const adjustedIndex = newIndex > draggedFolderIndex ? newIndex - 1 : newIndex;
 
                                     updated.splice(adjustedIndex, 0, moved);
@@ -274,7 +405,7 @@ const StudyTracker = () => {
                                                     const newIndex = dropBefore ? index : index + 1;
 
                                                     setFolders(prevFolders => {
-                                                        // Clone the entire folders array
+
                                                         const updatedFolders = prevFolders.map(f => ({
                                                             ...f,
                                                             tasks: [...f.tasks]
@@ -285,10 +416,10 @@ const StudyTracker = () => {
 
                                                         if (!sourceFolder || !targetFolder) return prevFolders;
 
-                                                        // Remove the moved task from the source folder tasks
+                                                        // Remove the moved task from the source folder
                                                         const [movedTask] = sourceFolder.tasks.splice(draggedTaskInfo.taskIndex, 1);
 
-                                                        // Adjust insertion index if moving down within the same folder
+                                                        // Adjust insertion if moving down within the same folder
                                                         let adjustedIndex = newIndex;
                                                         if (folder.id === draggedTaskInfo.folderId && newIndex > draggedTaskInfo.taskIndex) {
                                                             adjustedIndex = newIndex - 1;
@@ -321,6 +452,11 @@ const StudyTracker = () => {
                                                         <span className="due-date-label">{getDaysLeft(task.deadline)}</span>
                                                     </div>
                                                 )}
+                                                <div className="priority-tag"
+                                                    style={{ backgroundColor: priorities[task.priority].color }}
+                                                    title={priorities[task.priority].label}
+                                                    onClick={() => handlePriorityCycle(folder.id, index)}>
+                                                </div>
                                                 <div className="task-buttons">
                                                     <button onClick={() => editTask(folder.id, index)}>✏️</button>
                                                     <button onClick={() => deleteTask(folder.id, index)}>❌</button>
@@ -337,10 +473,22 @@ const StudyTracker = () => {
                 <div className="middle-column">
                     <div className="image-container"></div>
                     <div className="achievements-bar" onClick={toggleAchievements}>
-                        Achievements + Statistics
+                        Achievement Tracker
                     </div>
                     {showAchievements && (
                         <div className="achievements-content">
+                            <div className="palette-swatch-container">
+                                {Object.entries(palettes).map(([name, palette]) => (
+                                    <div
+                                        key={name}
+                                        className="palette-swatch"
+                                        style={{ backgroundColor: palette["--accent"] }}
+                                        onClick={() => applyPalette(name)}
+                                        title={name}
+                                    ></div>
+                                ))}
+                            </div>
+
                             <p>⭐ You completed 3 Pomodoros today!</p>
                             <p>📈 Your focus time increased by 12%</p>
                         </div>
@@ -360,7 +508,7 @@ const StudyTracker = () => {
             {/* <div className="main"></div> */}
             <Footer />
         </div>
-        
+
     );
 };
 
