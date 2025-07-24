@@ -7,7 +7,6 @@ const handleLogout = async (req, res) => {
     if (!cookies?.jwt) return res.sendStatus(204); //no content to send back
     const refreshToken = cookies.jwt;
 
-    //foundUser is a mongoose document that we found and can now modify and save
     const foundUser = await User.findOne({ refreshToken }).exec();
     if (!foundUser) {
         res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
