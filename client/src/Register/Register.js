@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import axios from 'axios'
+import axios from '../api/axios'
 import { useNavigate } from "react-router-dom";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
@@ -12,20 +12,20 @@ function Register() {
   const [pwd, setPassword] = useState()
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    axios.post("http://localhost:5000/register", { name, email, pwd })
-      .then(result => {
-        console.log(result)
-        if (result.status === 201) {
+    try {
+      const registerRes = await axios.post("/register", { name, email, pwd })
+      if (registerRes.status === 201) {
+        const signInRes = await axios.post("/auth", { email, pwd })
+        if (signInRes.status === 200) {
           navigate("/study")
-        } else {
-          navigate("/register")
-          alert("You are not registered to this service")
-
         }
-      })
-      .catch(err => console.log(err))
+      } else {
+        navigate("/register")
+        alert("You are not registered to this service")
+      }
+    } catch { console.log(e) }
   }
 
 

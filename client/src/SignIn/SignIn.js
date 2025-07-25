@@ -5,37 +5,29 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import './SignIn.css';
-axios.defaults.withCredentials = true; // trying to send cookies
 
 function SignIn() {
-
   const [email, setEmail] = useState()
   const [pwd, setPassword] = useState()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    axios.post("/auth",
-      { email, pwd },                  // This is your request body
-      // { withCredentials: true }        // This is your Axios config which is imported from ../api
-    )
-      .then(async result => {
-        console.log(result);
-        if (result.status === 200) {
-          const roles = result.data.roles;
-          if (roles && roles.Admin) {
-            navigate("/admin");
-          } else {
-            navigate("/study");
-            const response = await axios.get("/courses")
-            console.log(response.data)
-          }
+    try {
+      const signInRes = await axios.post("/auth", { email, pwd });
+      if (signInRes.status === 200) {
+        const roles = signInRes.data.roles;
+        if (roles && roles.Admin) {
+          navigate("/admin");
         } else {
-          navigate("/register");
-          alert("You are not registered to this service");
+          navigate("/study");
+          await axios.get("/courses")
         }
-      })
-      .catch(err => console.log(err))
+      } else {
+        navigate("/register");
+        alert("You are not registered to this service");
+      }
+    } catch { console.log(e) }
   };
 
 
