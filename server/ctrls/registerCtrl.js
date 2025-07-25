@@ -1,5 +1,6 @@
 const User = require('../model/User');
 const bcrypt = require('bcrypt');
+const { handleLogin } = require('./authCtrl');
 
 //handler for the new user information we receive at this register route
 const handleNewUser = async (req, res) => {
@@ -15,14 +16,11 @@ const handleNewUser = async (req, res) => {
 
         //able to create and store the new user with mongoose
         //regular role 'user' is assigned by default in the User model
-        const result = await User.create({
+        await User.create({
             "email": email,
             "name": name,
             "password": hashedPwd
         })
-
-        console.log(result);//record thats been created
-
         res.status(201).json({ 'success': `New user ${name} created!` });
     } catch (err) {
         res.status(500).json({ 'message': err.message });
