@@ -13,7 +13,11 @@ const courseSchema = new Schema({
     tasks: [{
         type: Schema.Types.ObjectId,
         ref: "Task"
-    }]
+    }],
+    folderColor: {
+        type: String,
+        required: false
+    }
 })
 
 module.exports = mongoose.model("Course", courseSchema);
