@@ -15,7 +15,8 @@ const createNewCourse = async (req, res) => {
         //create and store the new course record with mongoose
         const newCourse = await Course.create({
             courseName: req.body.courseName,
-            user: foundUser._id
+            user: foundUser._id,
+            folderColor: req.body.folderColor
         });
 
         //push the course's objectId onto the user's courses array & save the change
