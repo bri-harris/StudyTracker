@@ -11,9 +11,9 @@ router.route('/')
     .get(verifyJWTCookie, taskCtrl.getAllTasks)
 
 // //update a task information
-// .put(taskCtrl.updateTask)
+    .put(taskCtrl.updateTask)
 // //delete a task by ID
-// .delete(taskCtrl.deleteTask);
+    .delete(taskCtrl.deleteTask);
 
 
 
