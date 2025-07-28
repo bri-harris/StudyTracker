@@ -446,10 +446,10 @@ const StudyTracker = () => {
                                         }}
                                     >
                                         <span style={{ flex: 1 }}>{folder.name}</span>
-                                        <div className="task-buttons">
+                                        {/* <div className="task-buttons">
                                             <button onClick={() => editFolder(folder.id, folder.name, folder.color)}>✏️</button>
                                             <button onClick={() => deleteFolder(folder.id, folder.name, folder.color)}>❌</button>
-                                        </div>
+                                        </div> */}
                                     </div>
 
                                     {expandedFolderId === folder.id && (
