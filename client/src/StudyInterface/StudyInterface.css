@@ -53,6 +53,18 @@
     position: relative;
 }
 
+.loading-text {
+    color: var(--palette-header-text);
+    text-shadow:
+        -1px -1px 0 black,
+        1px -1px 0 black,
+        -1px 1px 0 black,
+        1px 1px 0 black;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 8px 8px 0 0;
+}
+
 .button-group {
     margin-left: auto;
     display: flex;
@@ -197,6 +209,11 @@
 .todo-list li.completed span {
     text-decoration: line-through;
     color: var(--palette-task-done);
+}
+
+.blur-task {
+    filter: blur(3px);
+    opacity: 0.6;
 }
 
 .progress-wrapper {

@@ -4,6 +4,8 @@ import NavUser from "../NavUser/NavUser";
 import Footer from "../Footer/Footer";
 import "../Home/Home.css";
 import "./StudyInterface.css";
+import MyCalendar from "./Calendar";
+
 
 const StudyTracker = () => {
     const [showAchievements, setShowAchievements] = useState(false);
@@ -20,6 +22,10 @@ const StudyTracker = () => {
     const [showFolderForm, setShowFolderForm] = useState(false);
     const [showTaskForm, setShowTaskForm] = useState(false);
     const [sortModes, setSortModes] = useState({});
+    const [showOnlyUrgent, setShowOnlyUrgent] = useState(false);
+    const [editFolderId, setEditFolderId] = useState(null);
+    const [editedFolderName, setEditedFolderName] = useState("");
+
 
     const [newFolderColor, setNewFolderColor] = useState("#ffb3b3");
     const [courseName, setNewFolderName] = useState();
@@ -68,7 +74,6 @@ const StudyTracker = () => {
             })
             .catch(e => console.log(e));
     };
-
 
     const calculateProgress = (startDate, deadline) => {
         const start = new Date(startDate);
@@ -255,6 +260,22 @@ const StudyTracker = () => {
         );
     };
 
+    const editFolder = (folderId, currentName, currentColor) => {
+        setEditFolderId(folderId);
+        setEditedFolderName(currentName);
+        setNewFolderColor(currentColor);
+    };
+
+    const deleteFolder = (folderId) => {
+        setFolders(prev => prev.filter(folder => folder.id !== folderId));
+
+        if (selectedFolderId === folderId) {
+            setSelectedFolderId(null);
+            setExpandedFolderId(null);
+        }
+    };
+
+
     const palettes = {
         default: {
             '--palette-bg': '#ffffff',
@@ -312,6 +333,9 @@ const StudyTracker = () => {
                             <button className="add-toggle" onClick={() => setShowAddMenu(!showAddMenu)}>+</button>
                             <button className="add-toggle" onClick={toggleSortMode} title={`Sort mode: ${sortModes[selectedFolderId] || "none"}`}>
                                 {sortModes[selectedFolderId] === "none" ? "=" : sortModes[selectedFolderId] === "priority" ? "↑" : "↓"}
+                            </button>
+                            <button className="add-toggle" onClick={() => setShowOnlyUrgent(prev => !prev)}>
+                                {showOnlyUrgent ? "¡" : "!"}
                             </button>
                         </div>
                         {showAddMenu && (
@@ -416,9 +440,16 @@ const StudyTracker = () => {
                                         style={{
                                             backgroundColor: folder.id === expandedFolderId ? "#e3f2fd" : "#f5f5f5",
                                             borderLeft: `10px solid ${folder.color}`,
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
                                         }}
                                     >
-                                        {folder.name}
+                                        <span style={{ flex: 1 }}>{folder.name}</span>
+                                        <div className="task-buttons">
+                                            <button onClick={() => editFolder(folder.id, folder.name, folder.color)}>✏️</button>
+                                            <button onClick={() => deleteFolder(folder.id, folder.name, folder.color)}>❌</button>
+                                        </div>
                                     </div>
 
                                     {expandedFolderId === folder.id && (
@@ -426,7 +457,7 @@ const StudyTracker = () => {
                                             {folder.tasks.map((task, index) => (
                                                 <li
                                                     key={index}
-                                                    className={task.completed ? "completed" : ""}
+                                                    className={`${task.completed ? "completed" : ""} ${showOnlyUrgent && task.priority !== "urgent" ? "blur-task" : ""}`}
                                                     style={{ borderLeft: `6px solid ${folder.color}` }}
                                                     draggable
                                                     onDragStart={() => setDraggedTaskInfo({ folderId: folder.id, taskIndex: index })}
@@ -504,7 +535,7 @@ const StudyTracker = () => {
                                 </li>
                             ))
                         ) : (
-                            <p>Loading...</p>
+                            <p className="loading-text">Loading...</p>
                         )}
                     </ul>
                 </div>
@@ -537,6 +568,9 @@ const StudyTracker = () => {
                 <div className="widgets">
                     <div className="widget calendar-widget">
                         <div className="header">Calendar</div>
+                        <div style={{ display: "flex", justifyContent: "center" }}>
+                            <MyCalendar />
+                        </div>
                     </div>
                     <div className="widget pomodoro-widget">
                         <div className="header">Pomodoro</div>
