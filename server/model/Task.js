@@ -14,7 +14,24 @@ const taskSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+
+    startDate: {
+        type: Date,
+        default: Date.now
+    },
+
+    deadline: {
+        type: Date,
+        default: null
+    },
+
+    priority: {
+        type: String,
+        default: 'medium'
     }
+
+
 })
 
 
