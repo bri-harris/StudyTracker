@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/StudyTracker/static/css/main.6529ff0a.css",
+    "main.js": "/StudyTracker/static/js/main.61069e0c.js",
+    "static/js/453.a3c1d153.chunk.js": "/StudyTracker/static/js/453.a3c1d153.chunk.js",
+    "index.html": "/StudyTracker/index.html",
+    "main.6529ff0a.css.map": "/StudyTracker/static/css/main.6529ff0a.css.map",
+    "main.61069e0c.js.map": "/StudyTracker/static/js/main.61069e0c.js.map",
+    "453.a3c1d153.chunk.js.map": "/StudyTracker/static/js/453.a3c1d153.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6529ff0a.css",
+    "static/js/main.61069e0c.js"
+  ]
+}
