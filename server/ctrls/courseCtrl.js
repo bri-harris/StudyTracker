@@ -1,5 +1,6 @@
 const Course = require('../model/Course');
 const User = require('../model/User');
+const Task = require('../model/Task');
 
 const createNewCourse = async (req, res) => {
     if (!req?.body?.courseName) {
@@ -48,36 +49,105 @@ const getAllCourses = async (req, res) => {
     }
 }
 
-// const updateCourse = async (req, res) => {
-//     if (!req?.body?.id) {
-//         return res.status(400).json({ "message": "ID parameter is required." });
-//     }
 
-//     //find and define the course
-//     const course = await Course.findOne({ _id: req.body.id }).exec();
-//     if (!course) {
-//         return res.status(204).json({ "message": `No course with id: ${req.body.id} found.` });
-//     }
-//     if (req.body?.courseName) course.courseName = req.body.courseName;
-//     if (req.body?.user) course.user = req.body.user;
-//     const result = await course.save(); //this is the course document we found and modified
-//     res.json(result);
-// }
+const updateCourse = async (req, res) => {
+  const { id, courseName } = req.body;
+  const token              = req.cookies.jwt;
 
-// const deleteCourse = async (req, res) => {
-//     if (!req?.body?.id) return res.status(400).json({ "message": "Course ID required." });
+  //  Validate inputs & auth (everything is not vital for our project)
+  if (!id)         return res.status(400).json({ message: 'Course ID required.' });
+  if (!courseName) return res.status(400).json({ message: 'New courseName required.' });
+  if (!token)      return res.status(401).json({ message: 'Authentication required.' });
 
-//     const course = await Course.findOne({ _id: req.body.id }).exec();
-//     if (!course) {
-//         return res.status(204).json({ "message": `No course with id: ${req.body.id} found.` });
-//     }
-//     const result = await course.deleteOne({ _id: req.body.id });
-//     res.json(result);
-// }
+  try {
+    
+    const user = await User.findOne({ token }).exec();
+    if (!user) {
+      console.error('updateCourse: no user for token', token);
+      return res.status(401).json({ message: 'Invalid session.' });
+    }
+
+    if (!user.courses.includes(id)) {
+      console.error(`updateCourse: user ${user._id} does not own course ${id}`);
+      return res.status(403).json({ message: 'Not allowed to update this course.' });
+    }
+
+    // Load & update the Course document
+    const course = await Course.findById(id).exec();
+    if (!course) {
+      console.error('updateCourse: course not found', id);
+      return res.status(404).json({ message: `No course with id ${id}.` });
+    }
+
+    course.courseName = courseName;
+    const updated = await course.save();
+    console.log(`updateCourse: course ${id} renamed to "${courseName}"`);
+
+    // return the updated document
+    return res.json(updated);
+
+  } catch (err) {
+    console.error('🔥 updateCourse error:', err);
+    return res.status(500).json({ message: 'Server error updating course.' });
+  }
+};
+
+
+
+const deleteCourse = async (req, res) => {
+  const { id }    = req.body;
+  const token     = req.cookies.jwt;
+
+  if (!id)    return res.status(400).json({ message: 'Course ID required.' });
+
+  try {
+    console.log('deleteCourse: incoming id=', id, 'token=', token);
+
+    // Authentication (not vital for our project)
+    const user = await User.findOne({ token }).exec();
+    if (!user) {
+      console.error('deleteCourse: no user for token');
+      return res.status(401).json({ message: 'Invalid session.' });
+    }
+
+    
+    if (!user.courses.includes(id)) {
+      console.error(`deleteCourse: user ${user._id} does not own course ${id}`);
+      return res.status(403).json({ message: 'Not allowed to delete this course.' });
+    }
+
+    // Load & delete the Course document
+    const course = await Course.findById(id).exec();
+    if (!course) {
+      console.error('deleteCourse: course not found', id);
+      return res.status(404).json({ message: `No course with id ${id}.` });
+    }
+    console.log('deleteCourse: deleting course doc', course.courseName);
+    await course.deleteOne();
+
+    // Pull out that course ID from the user document and save
+    user.courses = user.courses.filter(cid => cid.toString() !== id);
+    console.log(`deleteCourse: user.courses now = [${user.courses.join(',')}]`);
+    await user.save();
+
+    // delete all Tasks tied to that course
+    const del = await Task.deleteMany({ course: id }).exec();
+    console.log(`deleteCourse: deleted ${del.deletedCount} tasks for course ${id}`);
+
+    
+    return res.json({ message: `Course "${course.courseName}" and its ${del.deletedCount} task(s) deleted.` });
+  } catch (err) {
+    console.error('🔥 deleteCourse error:', err);
+    return res.status(500).json({ message: 'Server error deleting course.' });
+  }
+};
+
+
+
 
 module.exports = {
     createNewCourse,
-    getAllCourses
-    // updateCourse,
-    // deleteCourse
+    getAllCourses,
+    updateCourse,
+    deleteCourse
 };
