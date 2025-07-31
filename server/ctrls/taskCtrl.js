@@ -28,8 +28,8 @@ const getAllTasks = async (req, res) => {
 // Body: { taskname: string, course: ObjectId }
 
 const createNewTask = async (req, res) => {
-  const { taskname, course: courseId } = req.body;
-  const token = req.cookies?.jwt;
+  const { taskname, startDate, deadline, priority, course: courseId } = req.body;
+  const token = req.cookies.jwt;
 
   if (!taskname) return res.status(400).json({ message: 'Task name is required.' });
   if (!courseId) return res.status(400).json({ message: 'Course ID is required.' });
@@ -42,7 +42,12 @@ const createNewTask = async (req, res) => {
   }
 
   //Create the Task
-  const newTask = await Task.create({ taskname, course: courseId });
+  const newTask = await Task.create({
+     taskname, 
+     startDate: startDate ? new Date(startDate) : Date.now(), 
+     deadline: deadline ? new Date(deadline) : null, 
+     priority: priority || 'medium',
+     course: courseId });
 
   // Load the Course, push the task ID, then save
   const course = await Course.findById(courseId).exec();
@@ -59,8 +64,8 @@ const createNewTask = async (req, res) => {
 // Body: { id: ObjectId, taskname?: string, completed?: boolean }
 
 const updateTask = async (req, res) => {
-  const { id, taskname, completed } = req.body;
-  const token = req.cookies?.jwt;
+  const { id, taskname, completed, startDate, deadline, priority } = req.body;
+  const token = req.cookies.jwt;
   if (!id)    return res.status(400).json({ message: 'Task id required.' });
   if (!token) return res.status(401).json({ message: 'No token.' });
 
@@ -75,6 +80,11 @@ const updateTask = async (req, res) => {
 
   if (taskname)                     task.taskname = taskname;
   if (typeof completed === 'boolean') task.completed = completed;
+  if (startDate !== undefined) task.startDate = new Date(startDate);
+  if (deadline !== undefined)   task.deadline = deadline ? new Date(deadline) : null;
+  if (priority !== undefined)   task.priority = priority;
+
+  
   const updated = await task.save();
 
   return res.json(updated);

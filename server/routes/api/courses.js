@@ -10,8 +10,8 @@ router.route('/')
     .get(verifyJWTCookie, courseCtrl.getAllCourses)
 
 // //update a course information
-// .put(courseCtrl.updateCourse)
+    .put(verifyJWTCookie, courseCtrl.updateCourse)
 // //delete a course by ID
-// .delete(courseCtrl.deleteCourse);
+    .delete(verifyJWTCookie, courseCtrl.deleteCourse);
 
 module.exports = router;
