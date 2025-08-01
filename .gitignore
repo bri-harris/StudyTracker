@@ -28,3 +28,7 @@ node_modules/
 .vscode/
 
 .env
+
+build
+
+build/
