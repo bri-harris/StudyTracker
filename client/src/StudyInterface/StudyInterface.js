@@ -616,7 +616,7 @@ const StudyTracker = () => {
                 </div>
 
         <div className="middle-column">
-          <div className="image-container"></div>
+          <img src="your-image-url.jpg" alt="Background" className="faded-image" />
           <div className="achievements-bar" onClick={toggleAchievements}>
             Achievement Tracker
           </div>
