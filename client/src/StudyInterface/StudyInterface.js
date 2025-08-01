@@ -5,10 +5,11 @@ import Footer from "../Footer/Footer";
 import "../Home/Home.css";
 import "./StudyInterface.css";
 import MyCalendar from "./Calendar";
-
+import confetti from "canvas-confetti";
 
 const StudyTracker = () => {
   const [showAchievements, setShowAchievements] = useState(false);
+  const [usedDaysCount, setUsedDaysCount] = useState(0);
   const toggleAchievements = () => setShowAchievements((prev) => !prev);
 
   const [expandedFolderId, setExpandedFolderId] = useState(null);
@@ -34,6 +35,16 @@ const StudyTracker = () => {
   const [taskDeadline, setTaskDeadline] = useState("");
   const [taskStartDate, setTaskStartDate] = useState("");
 
+  const allTasks = folders.flatMap(folder => folder.tasks);
+  const totalCompleted = allTasks.filter(task => task.completed).length;
+  const completedBeforeDeadline = allTasks.filter(task =>
+    task.completed &&
+    task.deadline &&
+    new Date(task.completedAt || task.completedDate || Date.now()) <= new Date(task.deadline)
+  ).length;
+
+  const [earlyCompleteAnimTask, setEarlyCompleteAnimTask] = useState(null);
+
   useEffect(() => {
     fetch("/courses")
       .then((res) => res.json())
@@ -49,6 +60,18 @@ const StudyTracker = () => {
         console.log("Updated folders:", formatted);
       })
       .catch((err) => console.error("Error fetching courses:", err));
+  }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0]; // 'YYYY-MM-DD'
+    const usedDays = JSON.parse(localStorage.getItem("usedDays") || "[]");
+
+    if (!usedDays.includes(today)) {
+      usedDays.push(today);
+      localStorage.setItem("usedDays", JSON.stringify(usedDays));
+    }
+
+    setUsedDaysCount(usedDays.length);
   }, []);
 
   const handleSubmitCourse = (e) => {
@@ -235,18 +258,29 @@ const StudyTracker = () => {
 
   const toggleComplete = (folderId, index) => {
     setFolders((prev) =>
-      prev.map((folder) =>
-        folder.id === folderId
-          ? {
-              ...folder,
-              tasks: folder.tasks.map((task, i) =>
-                i === index ? { ...task, completed: !task.completed } : task
-              ),
-            }
-          : folder
-      )
+      prev.map((folder) => {
+        if (folder.id !== folderId) return folder;
+
+        const updatedTasks = folder.tasks.map((task, i) => {
+          if (i !== index) return task;
+
+          // Confetti!!!
+          if (!task.completed) {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+            });
+          }
+
+          return { ...task, completed: !task.completed };
+        });
+
+        return { ...folder, tasks: updatedTasks };
+      })
     );
   };
+  
 
   const editTask = (folderId, index) => {
     const folder = folders.find((f) => f.id === folderId);
@@ -413,161 +447,172 @@ const StudyTracker = () => {
 
           <ul className="folder-list">
             {folders.length > 0 ? (
-              folders.map((folder, folderIndex) => (
-                <li
-                  key={folder.id}
-                  className="folder-item"
-                  draggable
-                  onDragStart={() => setDraggedFolderIndex(folderIndex)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (
-                      draggedFolderIndex === null ||
-                      draggedFolderIndex === folderIndex
-                    )
-                      return;
+              folders.map((folder, folderIndex) => {
+                const totalTasks = folder.tasks.length;
+                const completedTasks = folder.tasks.filter(task => task.completed).length;
+                const completionPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-                    const bounding = e.currentTarget.getBoundingClientRect();
-                    const offset = e.clientY - bounding.top;
-                    const dropBefore = offset < bounding.height / 2;
-                    const newIndex = dropBefore ? folderIndex : folderIndex + 1;
+                return (
+                  <li
+                    key={folder.id}
+                    className="folder-item"
+                    draggable
+                    onDragStart={() => setDraggedFolderIndex(folderIndex)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (draggedFolderIndex === null || draggedFolderIndex === folderIndex) return;
 
-                    const updated = [...folders];
-                    const [moved] = updated.splice(draggedFolderIndex, 1);
+                      const bounding = e.currentTarget.getBoundingClientRect();
+                      const offset = e.clientY - bounding.top;
+                      const dropBefore = offset < bounding.height / 2;
+                      const newIndex = dropBefore ? folderIndex : folderIndex + 1;
 
-                    const adjustedIndex =
-                      newIndex > draggedFolderIndex ? newIndex - 1 : newIndex;
+                      const updated = [...folders];
+                      const [moved] = updated.splice(draggedFolderIndex, 1);
+                      const adjustedIndex = newIndex > draggedFolderIndex ? newIndex - 1 : newIndex;
+                      updated.splice(adjustedIndex, 0, moved);
 
-                    updated.splice(adjustedIndex, 0, moved);
+                      setFolders(updated);
+                      setDraggedFolderIndex(null);
+                    }}
+                    onDragEnd={() => setDraggedFolderIndex(null)}
+                  >
+                    <div
+                      className="folder-header"
+                      onClick={() => {
+                        setExpandedFolderId(prev => prev === folder.id ? null : folder.id);
+                        setSelectedFolderId(folder.id);
+                      }}
+                      style={{
+                        backgroundColor: folder.id === expandedFolderId ? "#e3f2fd" : "#f5f5f5",
+                        borderLeft: `10px solid ${folder.color}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        padding: "8px"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                        <span style={{ flex: 1 }}>{folder.name}</span>
+                      </div>
+                      
+                      <div style={{ fontSize: "12px", color: "#666", marginTop: "6px" }}>
+                        {completedTasks} of {totalTasks} complete
+                      </div>
 
-                                        setFolders(updated);
-                                        setDraggedFolderIndex(null);
+                      {totalTasks > 0 && (
+                        <div
+                          className="folder-progress-container"
+                          style={{
+                            marginTop: "6px",
+                            background: "#ddd",
+                            height: "6px",
+                            borderRadius: "4px",
+                            width: "100%"
+                          }}
+                        >
+                          <div
+                            className="folder-progress-bar"
+                            style={{
+                              width: `${completionPercent}%`,
+                              height: "100%",
+                              backgroundColor: "#4caf50",
+                              borderRadius: "4px"
+                            }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
+
+                    {expandedFolderId === folder.id && (
+                      <ul className="todo-list">
+                        {folder.tasks.map((task, index) => (
+                          <li
+                            key={index}
+                            className={`${task.completed ? "completed" : ""} ${showOnlyUrgent && task.priority !== "urgent" ? "blur-task" : ""}`}
+                            style={{ borderLeft: `6px solid ${folder.color}` }}
+                            draggable
+                            onDragStart={() => setDraggedTaskInfo({ folderId: folder.id, taskIndex: index })}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              if (!draggedTaskInfo) return;
+
+                              const bounding = e.currentTarget.getBoundingClientRect();
+                              const offset = e.clientY - bounding.top;
+                              const dropBefore = offset < bounding.height / 2;
+                              const newIndex = dropBefore ? index : index + 1;
+
+                              setFolders(prevFolders => {
+                                const updatedFolders = prevFolders.map(f => ({
+                                  ...f,
+                                  tasks: [...f.tasks]
+                                }));
+
+                                const sourceFolder = updatedFolders.find(f => f.id === draggedTaskInfo.folderId);
+                                const targetFolder = updatedFolders.find(f => f.id === folder.id);
+
+                                if (!sourceFolder || !targetFolder) return prevFolders;
+
+                                const [movedTask] = sourceFolder.tasks.splice(draggedTaskInfo.taskIndex, 1);
+
+                                let adjustedIndex = newIndex;
+                                if (folder.id === draggedTaskInfo.folderId && newIndex > draggedTaskInfo.taskIndex) {
+                                  adjustedIndex = newIndex - 1;
+                                }
+
+                                targetFolder.tasks.splice(adjustedIndex, 0, movedTask);
+
+                                return updatedFolders;
+                              });
+
+                              setDraggedTaskInfo(null);
+                            }}
+                            onDragEnd={() => setDraggedTaskInfo(null)}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={task.completed}
+                              onChange={() => toggleComplete(folder.id, index)}
+                            />
+                            <span>{task.text}</span>
+                            {task.deadline && task.startDate && (
+                              <div className="progress-wrapper">
+                                <div className="progress-container">
+                                  <div
+                                    className="progress-bar"
+                                    style={{
+                                      width: `${calculateProgress(task.startDate, task.deadline)}%`,
+                                      backgroundColor:
+                                        task.deadline && !task.completed && new Date(task.deadline) < new Date()
+                                          ? "#e53935"
+                                          : "#4caf50"
                                     }}
-                                    onDragEnd={() => setDraggedFolderIndex(null)}
-                                >
-                                    <div
-                                        className="folder-header"
-                                        onClick={() => {
-                                            setExpandedFolderId(prev => prev === folder.id ? null : folder.id);
-                                            setSelectedFolderId(folder.id);
-                                        }}
-                                        style={{
-                                            backgroundColor: folder.id === expandedFolderId ? "#e3f2fd" : "#f5f5f5",
-                                            borderLeft: `10px solid ${folder.color}`,
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <span style={{ flex: 1 }}>{folder.name}</span>
-                                        {/* <div className="task-buttons">
-                                            <button onClick={() => editFolder(folder.id, folder.name, folder.color)}>✏️</button>
-                                            <button onClick={() => deleteFolder(folder.id, folder.name, folder.color)}>❌</button>
-                                        </div> */}
-                                    </div>
-
-                                    {expandedFolderId === folder.id && (
-                                        <ul className="todo-list">
-                                            {folder.tasks.map((task, index) => (
-                                                <li
-                                                    key={index}
-                                                    className={`${task.completed ? "completed" : ""} ${showOnlyUrgent && task.priority !== "urgent" ? "blur-task" : ""}`}
-                                                    style={{ borderLeft: `6px solid ${folder.color}` }}
-                                                    draggable
-                                                    onDragStart={() => setDraggedTaskInfo({ folderId: folder.id, taskIndex: index })}
-                                                    onDragOver={(e) => e.preventDefault()}
-                                                    onDrop={(e) => {
-                                                        e.preventDefault();
-                                                        if (!draggedTaskInfo) return;
-
-                            const bounding =
-                              e.currentTarget.getBoundingClientRect();
-                            const offset = e.clientY - bounding.top;
-                            const dropBefore = offset < bounding.height / 2;
-                            const newIndex = dropBefore ? index : index + 1;
-
-                            setFolders((prevFolders) => {
-                              const updatedFolders = prevFolders.map((f) => ({
-                                ...f,
-                                tasks: [...f.tasks],
-                              }));
-
-                              const sourceFolder = updatedFolders.find(
-                                (f) => f.id === draggedTaskInfo.folderId
-                              );
-                              const targetFolder = updatedFolders.find(
-                                (f) => f.id === folder.id
-                              );
-
-                              if (!sourceFolder || !targetFolder)
-                                return prevFolders;
-
-                              // Remove the moved task from the source folder
-                              const [movedTask] = sourceFolder.tasks.splice(
-                                draggedTaskInfo.taskIndex,
-                                1
-                              );
-
-                              // Adjust insertion if moving down within the same folder
-                              let adjustedIndex = newIndex;
-                              if (
-                                folder.id === draggedTaskInfo.folderId &&
-                                newIndex > draggedTaskInfo.taskIndex
-                              ) {
-                                adjustedIndex = newIndex - 1;
-                              }
-
-                              // Insert moved task at the new index in target folder
-                              targetFolder.tasks.splice(
-                                adjustedIndex,
-                                0,
-                                movedTask
-                              );
-
-                              return updatedFolders;
-                            });
-
-                                                        setDraggedTaskInfo(null);
-                                                    }}
-                                                    onDragEnd={() => setDraggedTaskInfo(null)}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={task.completed}
-                                                        onChange={() => toggleComplete(folder.id, index)}
-                                                    />
-                                                    <span>{task.text}</span>
-                                                    {task.deadline && task.startDate && (
-                                                        <div className="progress-wrapper">
-                                                            <div className="progress-container">
-                                                                <div
-                                                                    className="progress-bar"
-                                                                    style={{ width: `${calculateProgress(task.startDate, task.deadline)}%` }}
-                                                                ></div>
-                                                            </div>
-                                                            <span className="due-date-label">{getDaysLeft(task.deadline)}</span>
-                                                        </div>
-                                                    )}
-                                                    <div className="priority-tag"
-                                                        style={{ backgroundColor: priorities[task.priority].color }}
-                                                        title={priorities[task.priority].label}
-                                                        onClick={() => handlePriorityCycle(folder.id, index)}>
-                                                    </div>
-                                                    <div className="task-buttons">
-                                                        <button onClick={() => editTask(folder.id, index)}>✏️</button>
-                                                        <button onClick={() => deleteTask(folder.id, index)}>❌</button>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </li>
-                            ))
-                        ) : (
-                            <p className="loading-text">Loading...</p>
-                        )}
-                    </ul>
+                                  ></div>
+                                </div>
+                                <span className="due-date-label">{getDaysLeft(task.deadline)}</span>
+                              </div>
+                            )}
+                            <div className="priority-tag"
+                              style={{ backgroundColor: priorities[task.priority].color }}
+                              title={priorities[task.priority].label}
+                              onClick={() => handlePriorityCycle(folder.id, index)}>
+                            </div>
+                            <div className="task-buttons">
+                              <button onClick={() => editTask(folder.id, index)}>✏️</button>
+                              <button onClick={() => deleteTask(folder.id, index)}>❌</button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })
+            ) : (
+              <p className="loading-text">Loading...</p>
+            )}
+    </ul>
                 </div>
 
         <div className="middle-column">
@@ -589,8 +634,9 @@ const StudyTracker = () => {
                 ))}
               </div>
 
-              <p>⭐ You completed 3 Pomodoros today!</p>
-              <p>📈 Your focus time increased by 12%</p>
+              <p>📅 Days Active: {usedDaysCount}</p>
+              <p>✅ Tasks Completed Today: {totalCompleted}</p>
+              <p>⏳ Tasks Finished Before Deadline: {completedBeforeDeadline}</p>
             </div>
           )}
         </div>
@@ -604,6 +650,29 @@ const StudyTracker = () => {
                     </div>
                     <div className="widget pomodoro-widget">
                         <div className="header">Pomodoro</div>
+                        <div className="pomodoro-info">
+                          <p>
+                            The Pomodoro Technique was invented by Francesco Cirillo. It is commonly associated
+                            with a tomato-shaped timer the inventor used to track the time intervals during the routine.
+                            Just like the icons and imagery used on our Study Tracker! The process is listed as such:
+                            Pick a task, set a timer, work on it, take a short break when the timer goes off, repeat! It is also
+                            advised to take a much longer break after completing four pomodoros!
+                            You can dig deeper into the history and benefits about the Pomodoro technique below!
+                          </p>
+                          <div className="button-container">
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  "https://csuglobal.edu/blog/pomodoro-technique-time-management",
+                                  "_blank"
+                                )
+                              }
+                              className="pomodoro-button"
+                            >
+                              Learn More
+                            </button>
+                          </div>
+                        </div>
                     </div>
                 </div>
             </div>
