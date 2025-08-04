@@ -46,21 +46,26 @@ const StudyTracker = () => {
   const [earlyCompleteAnimTask, setEarlyCompleteAnimTask] = useState(null);
 
   useEffect(() => {
-    fetch("/courses")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("API response:", data);
-        const formatted = data.courses.map((course, index) => ({
-          id: course._id,
-          name: course.courseName,
-          color: course.folderColor,
-          tasks: [],
-        }));
-        setFolders(formatted);
-        console.log("Updated folders:", formatted);
-      })
-      .catch((err) => console.error("Error fetching courses:", err));
-  }, []);
+     axios.get("/courses")
+    .then(res => {
+      const formatted = res.data.map(course => ({
+        id:    course._id,
+        name:  course.courseName,
+        color: course.folderColor || "#ffb3b3",
+        tasks: course.tasks.map(t => ({
+          _id:       t._id,
+          text:      t.taskname,
+          completed: t.completed,
+          startDate: t.startDate,
+          deadline:  t.deadline,
+          priority:  t.priority
+        }))
+      }));
+      setFolders(formatted);
+    })
+    .catch(err => console.error("Error loading courses:", err));
+}, []);
+
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]; // 'YYYY-MM-DD'
@@ -99,6 +104,39 @@ const StudyTracker = () => {
             })
             .catch(e => console.log(e));
     };
+  
+
+    
+  const handleUpdateCourse = (folderId) => {
+  // guard empty name
+  if (!editedFolderName.trim()) return;
+
+  axios
+    .put("/courses", {
+      id:         folderId,
+      courseName: editedFolderName.trim()
+    })
+    .then(res => {
+      const updated = res.data;
+      // update that folder’s name in local state
+      setFolders(prev =>
+        prev.map(f =>
+          f.id === folderId
+            ? { ...f, name: updated.courseName }
+            : f
+        )
+      );
+      // exit edit mode
+      setEditFolderId(null);
+      setEditedFolderName("");
+    })
+    .catch(err => console.error("Error updating course:", err));
+};
+
+
+
+
+
 
   const calculateProgress = (startDate, deadline) => {
     const start = new Date(startDate);
@@ -114,26 +152,29 @@ const StudyTracker = () => {
     return Math.min(100, Math.round((elapsedMs / totalMs) * 100));
   };
 
+
   const getDaysLeft = (deadline) => {
-    if (!deadline) return "";
+  if (!deadline) return "";
 
-    const [year, month, day] = deadline.split("-").map(Number);
-    const dueDate = new Date(year, month - 1, day);
-    const today = new Date();
-    const todayDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
+  // Parse the ISO string (or "YYYY-MM-DD") into a Date
+  const due = new Date(deadline);
 
-    const timeDiff = dueDate.getTime() - todayDate.getTime();
-    const dayDiff = Math.round(timeDiff / (1000 * 60 * 60 * 24));
+  // Normalize both to midnight to avoid hours/minutes skew
+  const dueDate = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    if (dayDiff < 0) return "Overdue";
-    if (dayDiff === 0) return "Due today";
-    if (dayDiff === 1) return "Due tomorrow";
-    return `${dayDiff} days left`;
-  };
+  // Compute difference in days
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const diffMs = dueDate.getTime() - todayDate.getTime();
+  const dayDiff = Math.ceil(diffMs / msPerDay);
+
+  if (dayDiff < 0) return "Overdue";
+  if (dayDiff === 0) return "Due today";
+  if (dayDiff === 1) return "Due tomorrow";
+  return `${dayDiff} days left`;
+};
+
 
   const priorities = {
     urgent: { color: "#e53935", label: "Urgent" },
@@ -143,24 +184,38 @@ const StudyTracker = () => {
   };
 
   const handlePriorityCycle = (folderId, taskIndex) => {
-    setFolders((prev) =>
-      prev.map((folder) => {
-        if (folder.id !== folderId) return folder;
+  // find the folder & task
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  const t = folder.tasks[taskIndex];
 
-        const updatedTasks = folder.tasks.map((task, index) => {
-          if (index !== taskIndex) return task;
+  // compute the next priority
+  const order = ["urgent", "high", "medium", "low"];
+  const next  = order[(order.indexOf(t.priority || "medium") + 1) % order.length];
 
-          const order = ["urgent", "high", "medium", "low"];
-          const currentIndex = order.indexOf(task.priority || "medium");
-          const nextPriority = order[(currentIndex + 1) % order.length];
-
-          return { ...task, priority: nextPriority };
-        });
-
-        return { ...folder, tasks: updatedTasks };
-      })
-    );
-  };
+  // send to server
+  axios
+    .put("/tasks", { id: t._id, priority: next })
+    .then(res => {
+      const updated = res.data;
+      // update UI from the server’s response
+      setFolders(prev =>
+        prev.map(f =>
+          f.id === folderId
+            ? {
+                ...f,
+                tasks: f.tasks.map((task, i) =>
+                  i === taskIndex
+                    ? { ...task, priority: updated.priority }
+                    : task
+                )
+              }
+            : f
+        )
+      );
+    })
+    .catch(err => console.error("Error cycling priority:", err));
+};
 
   const toggleSortMode = () => {
     const folderId = selectedFolderId;
@@ -218,70 +273,150 @@ const StudyTracker = () => {
     setSortModes((prev) => ({ ...prev, [folderId]: nextMode }));
   };
 
-  const addTask = () => {
-    if (!newTask.trim() || !selectedFolderId) return;
+   const addTask = () => {
+  if (!newTask.trim() || !selectedFolderId) return;
 
-    setFolders(
-      folders.map((folder) => {
-        if (folder.id === selectedFolderId) {
-          const updatedTasks = [...folder.tasks];
+  // ——— EDIT MODE: defer to updateTask ———
+  if (editIndex !== null) {
+    updateTask();
+    return;
+  }
 
-          if (editIndex !== null) {
-            updatedTasks[editIndex] = {
-              ...updatedTasks[editIndex],
-              text: newTask,
-              deadline: taskDeadline,
-              startDate: taskStartDate || updatedTasks[editIndex].startDate,
-            };
-          } else {
-            updatedTasks.push({
-              text: newTask,
-              completed: false,
-              startDate: taskStartDate || new Date().toISOString(),
-              deadline: taskDeadline,
-              priority: "medium",
-            });
-          }
+  // ——— CREATE MODE: call API ———
+  axios
+    .post("/tasks", {
+      taskname:  newTask,
+      course:    selectedFolderId,
+      startDate: taskStartDate || new Date().toISOString(),
+      deadline:  taskDeadline || null,
+      priority:  "medium"
+    })
+    .then(res => {
+      const t = res.data;
+      // append the new task into state
+      setFolders(prev =>
+        prev.map(folder =>
+          folder.id === selectedFolderId
+            ? {
+                ...folder,
+                tasks: [
+                  ...folder.tasks,
+                  {
+                    _id:       t._id,
+                    text:      t.taskname,
+                    completed: t.completed,
+                    startDate: t.startDate,
+                    deadline:  t.deadline,
+                    priority:  t.priority
+                  }
+                ]
+              }
+            : folder
+        )
+      );
+      // reset form
+      setNewTask("");
+      setTaskStartDate("");
+      setTaskDeadline("");
+      setEditIndex(null);
+      setShowTaskForm(false);
+    })
+    .catch(err => console.error("Error adding task:", err));
+};
 
-          return { ...folder, tasks: updatedTasks };
-        }
-        return folder;
-      })
-    );
 
-    setNewTask("");
-    setEditIndex(null);
-    setTaskDeadline("");
-    setTaskStartDate("");
-    setShowTaskForm(false);
-  };
+const updateTask = () => {
+  if (editIndex === null) return;
+
+  // Find the task we’re editing
+  const folder = folders.find(f => f.id === selectedFolderId);
+  const t      = folder.tasks[editIndex];
+
+  axios
+    .put("/tasks", {
+      id:        t._id,
+      taskname:  newTask,
+      startDate: taskStartDate || null,
+      deadline:  taskDeadline  || null
+    })
+    .then(res => {
+      const u = res.data;
+      // Merge updated fields back into state
+      setFolders(prev =>
+        prev.map(f =>
+          f.id === selectedFolderId
+            ? {
+                ...f,
+                tasks: f.tasks.map((task, i) =>
+                  i === editIndex
+                    ? {
+                        ...task,
+                        text:      u.taskname,
+                        startDate: u.startDate,
+                        deadline:  u.deadline,
+                        completed: u.completed,
+                        priority:  u.priority
+                      }
+                    : task
+                )
+              }
+            : f
+        )
+      );
+      // Cleanup form
+      setNewTask("");
+      setTaskStartDate("");
+      setTaskDeadline("");
+      setEditIndex(null);
+      setShowTaskForm(false);
+    })
+    .catch(err => console.error("Error updating task:", err));
+};
+
+
 
   const toggleComplete = (folderId, index) => {
-    setFolders((prev) =>
-      prev.map((folder) => {
-        if (folder.id !== folderId) return folder;
+  //  Find the folder and task
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  const t = folder.tasks[index];
 
-        const updatedTasks = folder.tasks.map((task, i) => {
-          if (i !== index) return task;
-
-          // Confetti!!!
-          if (!task.completed) {
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 },
-            });
-          }
-
-          return { ...task, completed: !task.completed };
+  // flipped flag to server
+  axios
+    .put("/tasks", {
+      id:        t._id,
+      completed: !t.completed
+    })
+    .then(res => {
+      const updated = res.data;
+      // Confetti on marking complete
+      if (!t.completed) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
         });
-
-        return { ...folder, tasks: updatedTasks };
-      })
-    );
-  };
+      }
+      // Update UI from the server’s response
+      setFolders(prev =>
+        prev.map(f =>
+          f.id === folderId
+            ? {
+                ...f,
+                tasks: f.tasks.map((task, i) =>
+                  i === index
+                    ? { ...task, completed: updated.completed }
+                    : task
+                )
+              }
+            : f
+        )
+      );
+    })
+    .catch(err => console.error("Error toggling task:", err));
+};
   
-
+/*
   const editTask = (folderId, index) => {
     const folder = folders.find((f) => f.id === folderId);
     if (!folder) return;
@@ -292,19 +427,65 @@ const StudyTracker = () => {
     setSelectedFolderId(folderId);
     setShowTaskForm(true);
   };
+  */
 
-    const deleteTask = (folderId, index) => {
-        setFolders(prev =>
-            prev.map(folder =>
-                folder.id === folderId
-                    ? {
-                        ...folder,
-                        tasks: folder.tasks.filter((_, i) => i !== index),
-                    }
-                    : folder
-            )
-        );
-    };
+  const formatInputDate = (value) => {
+  if (!value) return "";                         // catch null, undefined, ""
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";            // catch unparseable values
+  return d.toISOString().substring(0, 10);       // "YYYY-MM-DD"
+};
+
+  const editTask = (folderId, index) => {
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  const task = folder.tasks[index];
+
+  // 1) Prefill the text
+  setNewTask(task.text);
+
+  // 2) Build YYYY-MM-DD or “” if missing
+  const makeYMD = dt =>
+    dt
+      ? dt.slice ? dt.slice(0,10)                  // if it's already a "YYYY-MM-DD…" string
+      : new Date(dt).toISOString().slice(0,10)     // if it's a full Date/ISO
+      : "";
+
+  setTaskStartDate(makeYMD(task.startDate));
+  setTaskDeadline( makeYMD(task.deadline)  );
+
+  // 3) Flip into edit mode
+  setEditIndex(index);
+  setSelectedFolderId(folderId);
+  setShowTaskForm(true);
+};
+
+
+   const deleteTask = (folderId, index) => {
+  //  confirmation
+  if (!window.confirm("Delete this task permanently?")) return;
+
+  //  find the task’s real _id
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  const t = folder.tasks[index];
+
+  // call DELETE /tasks
+  axios
+    .delete("/tasks", { data: { id: t._id } })
+    .then(() => {
+      //  update local state only after server confirms
+      setFolders(prev =>
+        prev.map(f =>
+          f.id === folderId
+            ? { ...f, tasks: f.tasks.filter((_, i) => i !== index) }
+            : f
+        )
+      );
+    })
+    .catch(err => console.error("Error deleting task:", err));
+};
+
 
     const editFolder = (folderId, currentName, currentColor) => {
         setEditFolderId(folderId);
@@ -406,8 +587,8 @@ const StudyTracker = () => {
               />
               <input
                 type="date"
-                value={taskStartDate}
-                onChange={(e) => setTaskStartDate(e.target.value)}
+                value={taskStartDate /*|| undefine*/}
+                onChange={(e) => setTaskStartDate(e.target.value || "")}
                 placeholder="Start date"
               />
               <input
@@ -416,7 +597,10 @@ const StudyTracker = () => {
                 onChange={(e) => setTaskDeadline(e.target.value)}
                 placeholder="Deadline"
               />
-              <button onClick={addTask}>Add</button>
+              <button onClick={editIndex !== null ? updateTask : addTask}>
+                {editIndex !== null ? "Save" : "Add"}
+              </button>
+
             </div>
           )}
           {/*where to do course add */}
@@ -479,22 +663,67 @@ const StudyTracker = () => {
                     onDragEnd={() => setDraggedFolderIndex(null)}
                   >
                     <div
-                      className="folder-header"
-                      onClick={() => {
-                        setExpandedFolderId(prev => prev === folder.id ? null : folder.id);
-                        setSelectedFolderId(folder.id);
-                      }}
-                      style={{
-                        backgroundColor: folder.id === expandedFolderId ? "#e3f2fd" : "#f5f5f5",
-                        borderLeft: `10px solid ${folder.color}`,
-                        display: "flex",
-                        flexDirection: "column",
-                        padding: "8px"
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-                        <span style={{ flex: 1 }}>{folder.name}</span>
-                      </div>
+  className="folder-header"
+  onClick={() => {
+    if (editFolderId !== folder.id) {
+      setExpandedFolderId(prev =>
+        prev === folder.id ? null : folder.id
+      );
+      setSelectedFolderId(folder.id);
+    }
+  }}
+  style={{
+    backgroundColor:
+      folder.id === expandedFolderId ? "#e3f2fd" : "#f5f5f5",
+    borderLeft: `10px solid ${folder.color}`,
+    display: "flex",
+    alignItems: "center",
+    padding: "8px",
+    cursor: editFolderId === folder.id ? "default" : "pointer"
+  }}
+>
+  {editFolderId === folder.id ? (
+    <>
+      <input
+        type="text"
+        value={editedFolderName}
+        onChange={e => setEditedFolderName(e.target.value)}
+        onKeyDown={e =>
+          e.key === "Enter" && handleUpdateCourse(folder.id)
+        }
+        style={{ flex: 1, marginRight: "8px" }}
+        autoFocus
+      />
+      <button onClick={() => handleUpdateCourse(folder.id)}>
+        Save
+      </button>
+      <button onClick={() => setEditFolderId(null)}>
+        Cancel
+      </button>
+    </>
+  ) : (
+    <>
+      <span style={{ flex: 1 }}>{folder.name}</span>
+      <button
+        onClick={e => {
+          e.stopPropagation();
+          editFolder(folder.id, folder.name, folder.color);
+        }}
+        style={{
+          background: "none",
+          border: "none",
+          padding: "4px",
+          fontSize: "0.9rem",
+          opacity: 0.7,
+          cursor: "pointer"
+        }}
+        title="Edit course"
+      >
+        ✏️
+      </button>
+    </>
+  )}
+                    
                       
                       <div style={{ fontSize: "12px", color: "#666", marginTop: "6px" }}>
                         {completedTasks} of {totalTasks} complete
@@ -681,6 +910,39 @@ const StudyTracker = () => {
       <Footer />
     </div>
   );
-};
+  setFolders(
+    folders.map((folder) => {
+      if (folder.id === selectedFolderId) {
+        const updatedTasks = [...folder.tasks];
+
+        if (editIndex !== null) {
+          updatedTasks[editIndex] = {
+            ...updatedTasks[editIndex],
+            text: newTask,
+            deadline: taskDeadline,
+            startDate: taskStartDate || updatedTasks[editIndex].startDate,
+          };
+        } else {
+          updatedTasks.push({
+            text: newTask,
+            completed: false,
+            startDate: taskStartDate || new Date().toISOString(),
+            deadline: taskDeadline,
+            priority: "medium",
+          });
+        }
+
+        return { ...folder, tasks: updatedTasks };
+      }
+      return folder;
+    })
+  );
+
+  setNewTask("");
+  setEditIndex(null);
+  setTaskDeadline("");
+  setTaskStartDate("");
+  setShowTaskForm(false);
+};;
 
 export default StudyTracker;

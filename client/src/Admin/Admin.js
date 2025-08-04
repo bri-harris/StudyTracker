@@ -16,7 +16,11 @@ const Admin = () => {
         )
     }, [])
 
+
     const handleRemove = (user) => {
+        if (!window.confirm("Are you sure you want to permanently delete this student?")) {
+    return;
+  }
     fetch(`/removeStudent/${user}`, { method: 'DELETE', credentials: 'include' })
         .then(response => response.json())
         .then(data => {

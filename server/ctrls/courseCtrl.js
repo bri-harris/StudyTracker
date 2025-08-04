@@ -32,6 +32,7 @@ const createNewCourse = async (req, res) => {
     }
 }
 
+/*
 const getAllCourses = async (req, res) => {
     if (!req.cookies.jwt) {
         return res.status(401).json({ message: 'No valid Token or Cookie found associated with this session' });
@@ -48,7 +49,35 @@ const getAllCourses = async (req, res) => {
         console.error(err);
     }
 }
+*/
 
+const getAllCourses = async (req, res) => {
+  if (!req.cookies.jwt) {
+    return res
+      .status(401)
+      .json({ message: 'No valid Token or Cookie found associated with this session' });
+  }
+  try {
+    const token = req.cookies.jwt;
+
+    // find the user and populate BOTH courses and their nested tasks
+    const foundUser = await User.findOne({ token })
+      .populate({
+        path: 'courses',
+        populate: { path: 'tasks' }
+      })
+      .exec();
+    if (!foundUser) return res.sendStatus(401);
+
+    // return the array of courses
+    return res
+      .status(200)                
+      .json(foundUser.courses);  // front end gets an array directly
+  } catch (err) {
+    console.error(err);
+    return res.sendStatus(500);
+  }
+}
 
 const updateCourse = async (req, res) => {
   const { id, courseName } = req.body;
